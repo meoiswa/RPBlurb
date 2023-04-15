@@ -18,6 +18,7 @@ namespace RPBlurb
   {
     private readonly RPBlurbPlugin plugin;
     private bool pendingSave;
+    private bool pendingModified;
 
     public RPBlurbUI(RPBlurbPlugin plugin)
       : base(
@@ -61,17 +62,15 @@ namespace RPBlurb
 
     public void DrawSelfForm()
     {
-      if (plugin.SelfCharacter != null)
+      if (plugin.SelfCharacter != null && plugin.SelfCharacter.User != null && plugin.SelfCharacter.World != null)
       {
-        ImGui.Indent();
-
         ImGui.Text($"{plugin.SelfCharacter.User} @ {plugin.SelfCharacter.World}");
 
         ImGui.Text("Name: ");
         ImGui.SameLine();
         var name = plugin.SelfCharacter.Name ?? "";
         if (ImGui.InputText("##Dame", ref name, 255))
-        { 
+        {
           plugin.SelfCharacter.Modified = true;
           plugin.SelfCharacter.Name = name;
         }
@@ -104,23 +103,44 @@ namespace RPBlurb
         }
 
         // Add a button to save the Self Character data
-        if (pendingSave)
+        if (pendingSave || !plugin.SelfCharacter.Modified)
         {
-          ImGui.Text("Saving...");
-        } else if (plugin.SelfCharacter.Modified && ImGui.Button("Save"))
+          ImGui.BeginDisabled();
+        }
+        if (ImGui.Button("Save"))
         {
           pendingSave = true;
-          _ = plugin.CharacterRoleplayDataService.SetCharacterAsync(plugin.SelfCharacter).ContinueWith((result) => pendingSave = false);
+          _ = plugin.CharacterRoleplayDataService.SetCharacterAsync(plugin.SelfCharacter).ContinueWith((result) => {
+            pendingModified = true;
+          });
         }
 
-        ImGui.Unindent();
+        if (pendingModified && !plugin.SelfCharacter.Modified)
+        {
+          pendingModified = false;
+          pendingSave = false;
+        }
+
+        if (pendingSave)
+        {
+          ImGui.SameLine();
+          ImGui.Text("Saving...");
+        }
+
+        if (pendingSave || !plugin.SelfCharacter.Modified)
+        {
+          ImGui.EndDisabled();
+        }
+
+      }
+      else
+      {
+        ImGui.Text("Loading...");
       }
     }
 
     public void DrawTargetForm()
     {
-      ImGui.Indent();
-
       var tcrd = plugin.TargetCharacterRoleplayData;
       if (tcrd != null)
       {
@@ -153,21 +173,26 @@ namespace RPBlurb
       {
         plugin.ForceCacheClearForTargetCharacter = true;
       }
-
-      ImGui.Unindent();
     }
 
     public override void Draw()
     {
       DrawSectionMasterEnable();
 
-      ImGui.Separator();
-
-      DrawTargetForm();
-
-      ImGui.Separator();
-
-      DrawSelfForm();
+      if (ImGui.BeginTabBar("tabs"))
+      {
+        if (ImGui.BeginTabItem("Target"))
+        {
+          DrawTargetForm();
+          ImGui.EndTabItem();
+        }
+        if (ImGui.BeginTabItem("Self"))
+        {
+          DrawSelfForm();
+          ImGui.EndTabItem();
+        }
+        ImGui.EndTabBar();
+      }
     }
   }
 }

@@ -9,7 +9,6 @@ using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 
 namespace RPBlurb
@@ -30,7 +29,6 @@ namespace RPBlurb
     public TargetManager TargetManager { get; init; }
     public RPBlurbUI Window { get; init; }
 
-
     private CharacterRoleplayData? selfCharacter = null;
     public CharacterRoleplayData? SelfCharacter
     {
@@ -38,16 +36,17 @@ namespace RPBlurb
       {
         if (selfCharacter == null && ClientState.LocalPlayer != null && ClientState.LocalPlayer.HomeWorld.GameData != null)
         {
-          selfCharacter = CharacterRoleplayDataService.GetCharacter(
-             ClientState.LocalPlayer.HomeWorld.GameData.Name.ToString(),
-             ClientState.LocalPlayer.Name.ToString(),
-             false);
+          var world = ClientState.LocalPlayer.HomeWorld.GameData.Name.ToString();
+          var user = ClientState.LocalPlayer.Name.ToString();
+
+          selfCharacter = CharacterRoleplayDataService.GetCharacter(world, user, false);
+          selfCharacter.World = world;
+          selfCharacter.User = user;
         }
         return selfCharacter;
       }
     }
     public CharacterRoleplayData? TargetCharacterRoleplayData { get; set; }
-    public bool ForceCacheClearForTargetCharacter { get; set; }
 
     public CharacterRoleplayDataService CharacterRoleplayDataService { get; init; }
 
@@ -61,6 +60,7 @@ namespace RPBlurb
       PluginInterface = pluginInterface;
       CommandManager = commandManager;
       ChatGui = chatGui;
+
       WindowSystem = new("RPBlurbPlugin");
       CharacterRoleplayDataService = new CharacterRoleplayDataService();
 
@@ -91,6 +91,9 @@ namespace RPBlurb
 
     public void Dispose()
     {
+      CharacterRoleplayDataService.Dispose();
+      SelfCharacter?.Dispose();
+
       PluginInterface.UiBuilder.Draw -= DrawUI;
       PluginInterface.UiBuilder.OpenConfigUi -= DrawConfigUI;
       Service.Framework.Update -= OnUpdate;
@@ -100,7 +103,7 @@ namespace RPBlurb
       CommandManager.RemoveHandler(commandName);
     }
 
-    private Configuration LoadConfiguration()
+    private static Configuration LoadConfiguration()
     {
       return new Configuration();
     }
@@ -143,12 +146,6 @@ namespace RPBlurb
         {
           var charaUser = chara.Name.ToString();
           var charaWorld = chara.HomeWorld.GameData!.Name.ToString();
-
-          if (ForceCacheClearForTargetCharacter)
-          {
-            ForceCacheClearForTargetCharacter = false;
-            CharacterRoleplayDataService.RemoveCharacterRequestCache(charaWorld, charaUser);
-          }
 
           TargetCharacterRoleplayData = CharacterRoleplayDataService.GetCharacter(charaWorld, charaUser);
         }

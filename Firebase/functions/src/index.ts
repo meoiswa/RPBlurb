@@ -43,6 +43,8 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
   const world = body.World;
   const user = body.User;
   const name = body.Name;
+  const nameStyle = body.NameStyle;
+  const title = body.Title;
   const description = body.Description;
   const alignment = body.Alignment;
   const status = body.Status;
@@ -56,6 +58,8 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
     User: user,
     World: world,
     Name: name,
+    NameStyle: nameStyle,
+    Title: title,
     Description: description,
     Status: status,
     Alignment: alignment

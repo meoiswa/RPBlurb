@@ -5,10 +5,12 @@ using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using ImGuiNET;
 using System;
 using System.Numerics;
+using System.Linq;
 using Dalamud.Game.ClientState;
 using System.Net.Http;
 using System.Collections.Generic;
 using System.Web;
+using Dalamud.Interface.GameFonts;
 
 namespace RPBlurb
 {
@@ -19,6 +21,11 @@ namespace RPBlurb
     private readonly RPBlurbPlugin plugin;
     private bool pendingSave;
     private bool pendingModified;
+    private GameFontHandle jupiterStyleLarge;
+    private GameFontHandle axisStyleLarge;
+    private GameFontHandle trumpGothicStyleLarge;
+    private GameFontHandle titleStyle;
+    private GameFontHandle itallicsStyle;
 
     public RPBlurbUI(RPBlurbPlugin plugin)
       : base(
@@ -35,6 +42,13 @@ namespace RPBlurb
         MinimumSize = new Vector2(468, 0),
         MaximumSize = new Vector2(468, 1000)
       };
+
+      jupiterStyleLarge = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Jupiter, 36));
+      axisStyleLarge = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Axis, 36));
+      trumpGothicStyleLarge = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.TrumpGothic, 36));
+
+      titleStyle = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Axis, 20));
+      itallicsStyle = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Axis, 14) { Italic = true });
     }
 
     public void Dispose()
@@ -62,45 +76,92 @@ namespace RPBlurb
 
     public void DrawSelfForm()
     {
-      if (plugin.SelfCharacter != null && plugin.SelfCharacter.User != null && plugin.SelfCharacter.World != null)
+      if (plugin.SelfCharacter != null)
       {
+        if (plugin.SelfCharacter.Loading)
+        {
+          ImGui.Text("Loading...");
+          return;
+        }
+
         ImGui.Text($"{plugin.SelfCharacter.User} @ {plugin.SelfCharacter.World}");
 
-        ImGui.Text("Name: ");
-        ImGui.SameLine();
-        var name = plugin.SelfCharacter.Name ?? "";
-        if (ImGui.InputText("##Dame", ref name, 255))
+        if (ImGui.BeginTable("##SelfTable", 2, ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit))
         {
-          plugin.SelfCharacter.Modified = true;
-          plugin.SelfCharacter.Name = name;
+          ImGui.TableNextColumn();
+          ImGui.Text("Name");
+
+          ImGui.TableNextColumn();
+          var name = plugin.SelfCharacter.Name ?? "";
+          ImGui.SetNextItemWidth(370);
+          if (ImGui.InputText("##Name", ref name, 255))
+          {
+            plugin.SelfCharacter.Modified = true;
+            plugin.SelfCharacter.Name = name;
+          }
+
+          ImGui.TableNextColumn();
+          ImGui.Text("Style");
+
+          ImGui.TableNextColumn();
+          var style = plugin.SelfCharacter.NameStyle ?? 0;
+          ImGui.SetNextItemWidth(370);
+          if (ImGui.Combo("##NameStyle", ref style, "Jupiter\0Axis\0Trump Gothic\0"))
+          {
+            plugin.SelfCharacter.Modified = true;
+            plugin.SelfCharacter.NameStyle = style;
+          }
+
+          ImGui.TableNextColumn();
+          ImGui.Text("Title");
+
+          ImGui.TableNextColumn();
+          var title = plugin.SelfCharacter.Title ?? "";
+          ImGui.SetNextItemWidth(370);
+          if (ImGui.InputText("##Title", ref title, 255))
+          {
+            plugin.SelfCharacter.Modified = true;
+            plugin.SelfCharacter.Title = title;
+          }
+
+          ImGui.TableNextColumn();
+          ImGui.Text("Alignment");
+
+          ImGui.TableNextColumn();
+          var alignment = plugin.SelfCharacter.Alignment ?? "";
+          ImGui.SetNextItemWidth(370);
+          if (ImGui.InputText("##Alignment", ref alignment, 255))
+          {
+            plugin.SelfCharacter.Modified = true;
+            plugin.SelfCharacter.Alignment = alignment;
+          }
+
+          ImGui.TableNextColumn();
+          ImGui.Text("Status");
+
+          ImGui.TableNextColumn();
+          var status = plugin.SelfCharacter.Status ?? "";
+          ImGui.SetNextItemWidth(370);
+          if (ImGui.InputText("##Status", ref status, 255))
+          {
+            plugin.SelfCharacter.Modified = true;
+            plugin.SelfCharacter.Status = status;
+          }
+
+          ImGui.TableNextColumn();
+          ImGui.Text("Description");
+
+          ImGui.TableNextColumn();
+          var description = plugin.SelfCharacter.Description ?? "";
+          if (ImGui.InputTextMultiline("##Description", ref description, 255, new Vector2(370, 100)))
+          {
+            plugin.SelfCharacter.Modified = true;
+            plugin.SelfCharacter.Description = description;
+          }
+
+          ImGui.EndTable();
         }
 
-        ImGui.Text("Description: ");
-        ImGui.SameLine();
-        var description = plugin.SelfCharacter.Description ?? "";
-        if (ImGui.InputText("##Description", ref description, 255))
-        {
-          plugin.SelfCharacter.Modified = true;
-          plugin.SelfCharacter.Description = description;
-        }
-
-        ImGui.Text("Alignment: ");
-        ImGui.SameLine();
-        var alignment = plugin.SelfCharacter.Alignment ?? "";
-        if (ImGui.InputText("##Alignment", ref alignment, 255))
-        {
-          plugin.SelfCharacter.Modified = true;
-          plugin.SelfCharacter.Alignment = alignment;
-        }
-
-        ImGui.Text("Status: ");
-        ImGui.SameLine();
-        var status = plugin.SelfCharacter.Status ?? "";
-        if (ImGui.InputText("##Status", ref status, 255))
-        {
-          plugin.SelfCharacter.Modified = true;
-          plugin.SelfCharacter.Status = status;
-        }
 
         // Add a button to save the Self Character data
         if (pendingSave || !plugin.SelfCharacter.Modified)
@@ -110,13 +171,15 @@ namespace RPBlurb
         if (ImGui.Button("Save"))
         {
           pendingSave = true;
-          _ = plugin.CharacterRoleplayDataService.SetCharacterAsync(plugin.SelfCharacter).ContinueWith((result) => {
+          _ = plugin.CharacterRoleplayDataService.SetCharacterAsync(plugin.SelfCharacter, (result) => {
+            PluginLog.LogDebug($"SetCharacterAsync result: {result}");
             pendingModified = true;
           });
         }
 
-        if (pendingModified && !plugin.SelfCharacter.Modified)
+        if (pendingModified && plugin.SelfCharacter.Modified)
         {
+          plugin.SelfCharacter.Modified = false;
           pendingModified = false;
           pendingSave = false;
         }
@@ -139,24 +202,75 @@ namespace RPBlurb
       }
     }
 
-    public void DrawTargetForm()
+    public void DrawDataForm(CharacterRoleplayData? data)
     {
-      var tcrd = plugin.TargetCharacterRoleplayData;
-      if (tcrd != null)
+      ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f));
+      if (data != null)
       {
-        if (!tcrd.Invalid)
+        if (data.Loading)
         {
-          if (tcrd.World != null && tcrd.User != null)
+          ImGui.Text("Loading...");
+          return;
+        }
+        if (!data.Invalid)
+        {
+          var fontPushed = false;
+          switch (data.NameStyle ?? 0)
           {
-            ImGui.Text(tcrd.User + " @ " + tcrd.World);
-            ImGui.Text("Name: " + tcrd.Name);
-            ImGui.Text("Description: " + tcrd.Description);
-            ImGui.Text("Alignment: " + tcrd.Alignment);
-            ImGui.Text("Status: " + tcrd.Status);
+            case 0:
+              ImGui.PushFont(jupiterStyleLarge.ImFont);
+              fontPushed = true;
+              break;
+            case 1:
+              ImGui.PushFont(axisStyleLarge.ImFont);
+              fontPushed = true;
+              break;
+            case 2:
+              ImGui.PushFont(trumpGothicStyleLarge.ImFont);
+              fontPushed = true;
+              break;
+            default:
+              break;
+          }
+
+          if (!string.IsNullOrWhiteSpace(data.Name))
+          {
+            TextCentered(data.Name);
           }
           else
           {
-            ImGui.Text("Loading...");
+            TextCentered(data.User ?? "");
+          }
+
+          if (fontPushed)
+          {
+            ImGui.PopFont();
+          }
+
+          if (!string.IsNullOrWhiteSpace(data.Title))
+          {
+            ImGui.PushFont(titleStyle.ImFont);
+            TextCentered(data.Title);
+            ImGui.PopFont();
+          }
+
+          if (!string.IsNullOrWhiteSpace(data.Alignment))
+          {
+            ImGui.PushFont(itallicsStyle.ImFont);
+            TextCentered("\u00AB" + data.Alignment + "\u00BB");
+            ImGui.PopFont();
+          }
+
+          if (!string.IsNullOrWhiteSpace(data.Status))
+          {
+            ImGui.Separator();
+            TextCentered(data.Status);
+          }
+
+          if (!string.IsNullOrWhiteSpace(data.Description))
+          {
+            ImGui.Separator();
+            ImGui.Text(data.Description);
           }
         }
         else
@@ -168,11 +282,7 @@ namespace RPBlurb
       {
         ImGui.Text("No target");
       }
-
-      if (ImGui.Button("Refresh"))
-      {
-        plugin.ForceCacheClearForTargetCharacter = true;
-      }
+      ImGui.PopStyleVar();
     }
 
     public override void Draw()
@@ -183,16 +293,57 @@ namespace RPBlurb
       {
         if (ImGui.BeginTabItem("Target"))
         {
-          DrawTargetForm();
+          DrawDataForm(plugin.TargetCharacterRoleplayData);
           ImGui.EndTabItem();
         }
         if (ImGui.BeginTabItem("Self"))
         {
           DrawSelfForm();
+          ImGui.Separator();
+          ImGui.Text("Preview: ");
+          ImGui.Separator();
+          DrawDataForm(plugin.SelfCharacter);
           ImGui.EndTabItem();
         }
         ImGui.EndTabBar();
       }
+    }
+
+    private void TextCentered(string text)
+    {
+      var windowWidth = ImGui.GetWindowSize().X;
+      var textWidth = ImGui.CalcTextSize(text).X;
+
+      ImGui.SetCursorPosX((windowWidth - textWidth) * 0.5f);
+      ImGui.Text(text);
+    }
+
+    private void TextMultilineCentered(string text, Vector4? color = null)
+    {
+      var win_width = ImGui.GetWindowSize().X;
+      var text_width = ImGui.CalcTextSize(text).X;
+
+      var text_indentation = (win_width - text_width) * 0.5f;
+
+      var min_indentation = 20.0f;
+      if (text_indentation <= min_indentation)
+      {
+        text_indentation = min_indentation;
+      }
+
+      ImGui.NewLine();
+      ImGui.SameLine(text_indentation);
+      ImGui.PushTextWrapPos(win_width - text_indentation);
+      if (color != null)
+      {
+        ImGui.PushStyleColor(ImGuiCol.Text, color.Value);
+      }
+      ImGui.TextWrapped(text);
+      if (color != null)
+      {
+        ImGui.PopStyleColor();
+      }
+      ImGui.PopTextWrapPos();
     }
   }
 }

@@ -14,7 +14,7 @@ using Newtonsoft.Json.Linq;
 
 namespace RPBlurb
 {
-  public class CharacterRoleplayDataService
+  public class CharacterRoleplayDataService : IDisposable
   {
     private static readonly string setCharacterFunctionUrl = "https://us-central1-gwhet-box.cloudfunctions.net/setCharacter";
 
@@ -30,10 +30,10 @@ namespace RPBlurb
       db = FirestoreDb.Create("gwhet-box", builder.Build());
     }
 
-    public async Task<bool> SetCharacterAsync(CharacterRoleplayData data, CancellationToken cancellationToken = default)
+    public async Task<bool> SetCharacterAsync(CharacterRoleplayData data, Action<bool> callback, CancellationToken cancellationToken = default)
     {
-      PluginLog.LogDebug($"SetCharacterAsync: {data.World}@{data.User}. {data.Name}, {data.Description}, {data.Alignment}, {data.Status}");
-      using var timeoutSource = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+      PluginLog.LogDebug($"SetCharacterAsync: {data.User}@{data.World}");
+      using var timeoutSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
       using var combinedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
 
       using var request = new HttpRequestMessage(HttpMethod.Post, setCharacterFunctionUrl);
@@ -43,27 +43,33 @@ namespace RPBlurb
         ["World"] = data.World,
         ["User"] = data.User,
         ["Name"] = data.Name,
+        ["NameStyle"] = data.NameStyle,
+        ["Title"] = data.Title,
         ["Description"] = data.Description,
         ["Alignment"] = data.Alignment,
         ["Status"] = data.Status
       };
 
+
       var json = JsonConvert.SerializeObject(job);
       request.Content = new StringContent(json);
 
-      using var response = await client
-          .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, combinedToken.Token);
+      PluginLog.LogDebug($"SetCharacterAsync: {data.User}@{data.World}: {json}");
 
       try
       {
+        using var response = await client
+            .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, combinedToken.Token);
         response.EnsureSuccessStatusCode();
       }
       catch (Exception ex)
       {
         PluginLog.LogError(ex.ToString());
+        callback(false);
         return false;
       }
 
+      callback(true);
       return true;
     }
 
@@ -75,7 +81,7 @@ namespace RPBlurb
 
     public CharacterRoleplayData GetCharacter(string world, string user, bool cache = true)
     {
-      if (cache && Cache.TryGetValue("${user}@{world}", out CharacterRoleplayData value))
+      if (cache && Cache.TryGetValue($"{user}@{world}", out CharacterRoleplayData? value))
       {
         return value;
       }
@@ -85,7 +91,7 @@ namespace RPBlurb
         value = new CharacterRoleplayData(GetCharacterDocRef(world, user));
         if (cache)
         {
-          Cache["${user}@{world}"] = value;
+          Cache[$"{user}@{world}"] = value;
         }
         return value;
       }
@@ -100,6 +106,16 @@ namespace RPBlurb
     {
       var uniqueKey = $"{user}@{world}";
       Cache.Remove(uniqueKey);
+    }
+
+    public void Dispose()
+    {
+      foreach (var key in Cache.Keys)
+      {
+        Cache[key].Dispose();
+      }
+
+      GC.SuppressFinalize(this);
     }
   }
 }

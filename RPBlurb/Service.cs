@@ -4,6 +4,7 @@ using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.Gui;
+using Dalamud.Interface;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 

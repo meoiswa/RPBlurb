@@ -1,10 +1,11 @@
+using System;
 using System.Threading.Tasks;
 using Dalamud.Logging;
 using Google.Cloud.Firestore;
 
 namespace RPBlurb
 {
-  public class CharacterRoleplayData
+  public class CharacterRoleplayData : IDisposable
   {
     private readonly DocumentReference docRef;
     private readonly FirestoreChangeListener listener;
@@ -15,17 +16,13 @@ namespace RPBlurb
       listener = CreateListener();
     }
 
-    ~CharacterRoleplayData() 
-    {
-      PluginLog.LogDebug($"CharacterRoleplayData destructor called: {World}@{User}");
-      listener.StopAsync().Wait();
-    }
-
     private FirestoreChangeListener CreateListener()
     {
       return docRef.Listen(snapshot =>
       { 
-        if (snapshot.Exists)
+        PluginLog.LogDebug("Document Snapshot: " + snapshot.Id);
+        Loading = false; 
+        if (snapshot.Exists) 
         { 
           if (snapshot.TryGetValue<string>("World", out var world))
           {
@@ -38,6 +35,14 @@ namespace RPBlurb
           if (snapshot.TryGetValue<string>("Name", out var name))
           {
             Name = name;
+          }
+          if (snapshot.TryGetValue<int>("NameStyle", out var nameStyle))
+          {
+            NameStyle = nameStyle;
+          }
+          if (snapshot.TryGetValue<string>("Title", out var title))
+          {
+            Title = title;
           }
           if (snapshot.TryGetValue<string>("Description", out var description))
           {
@@ -52,6 +57,7 @@ namespace RPBlurb
             Status = status;
           }
 
+          Invalid = false;
           Modified = false;
         }
         else
@@ -61,17 +67,22 @@ namespace RPBlurb
       });
     }
 
-    public Task StopAsync()
+    public void Dispose()
     {
-      return listener.StopAsync();
+      PluginLog.LogDebug($"CharacterRoleplayData Dispose called: {User}@{World}");
+      listener.StopAsync().Wait();
+      GC.SuppressFinalize(this);
     }
 
     public string? World { get; set; }
     public string? User { get; set; }
     public string? Name { get; set; }
+    public int? NameStyle { get; set; }
+    public string? Title { get; set; }
     public string? Description { get; set; }
     public string? Alignment { get; set; }
     public string? Status { get; set; }
+    public bool Loading { get; set; } = true;
     public bool Invalid { get; set; }
     public bool Modified { get; set; }
   }

@@ -1,14 +1,14 @@
 {
   "Author": "Meoiswa",
   "Name": "RPBlurb",
-  "Punchline": "Align to the norm.",
-  "Description": "Shareable RP bios",
+  "Punchline": "Realtime RP bios",
+  "Description": "Realtime Roleplay sheets",
   "InternalName": "RPBlurb",
   "ApplicableVersion": "any",
   "Tags": [
     "UI",
-    "tweak",
-    "camera",
-    "combat"
+    "RP",
+    "social",
+    "vanity"
   ]
 }

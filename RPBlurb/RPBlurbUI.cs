@@ -17,7 +17,7 @@ namespace RPBlurb
   public unsafe class RPBlurbUI : Window, IDisposable
   {
     private readonly RPBlurbPlugin plugin;
-
+    private bool pendingSave;
 
     public RPBlurbUI(RPBlurbPlugin plugin)
       : base(
@@ -51,10 +51,10 @@ namespace RPBlurb
     private void DrawSectionMasterEnable()
     {
       // can't ref a property, so use a local copy
-      var enabled = plugin.Configuration.MasterEnable;
+      var enabled = plugin.Configuration.Enabled;
       if (ImGui.Checkbox("Master Enable", ref enabled))
       {
-        plugin.Configuration.MasterEnable = enabled;
+        plugin.Configuration.Enabled = enabled;
         plugin.Configuration.Save();
       }
     }
@@ -65,20 +65,15 @@ namespace RPBlurb
       {
         ImGui.Indent();
 
+        ImGui.Text($"{plugin.SelfCharacter.User} @ {plugin.SelfCharacter.World}");
+
         ImGui.Text("Name: ");
         ImGui.SameLine();
         var name = plugin.SelfCharacter.Name ?? "";
-        if (ImGui.InputText("##Name", ref name, 255))
-        {
+        if (ImGui.InputText("##Dame", ref name, 255))
+        { 
+          plugin.SelfCharacter.Modified = true;
           plugin.SelfCharacter.Name = name;
-        }
-
-        ImGui.Text("World: ");
-        ImGui.SameLine();
-        var world = plugin.SelfCharacter.World ?? "";
-        if (ImGui.InputText("##World", ref world, 255))
-        {
-          plugin.SelfCharacter.World = world;
         }
 
         ImGui.Text("Description: ");
@@ -86,6 +81,7 @@ namespace RPBlurb
         var description = plugin.SelfCharacter.Description ?? "";
         if (ImGui.InputText("##Description", ref description, 255))
         {
+          plugin.SelfCharacter.Modified = true;
           plugin.SelfCharacter.Description = description;
         }
 
@@ -94,6 +90,7 @@ namespace RPBlurb
         var alignment = plugin.SelfCharacter.Alignment ?? "";
         if (ImGui.InputText("##Alignment", ref alignment, 255))
         {
+          plugin.SelfCharacter.Modified = true;
           plugin.SelfCharacter.Alignment = alignment;
         }
 
@@ -102,13 +99,18 @@ namespace RPBlurb
         var status = plugin.SelfCharacter.Status ?? "";
         if (ImGui.InputText("##Status", ref status, 255))
         {
+          plugin.SelfCharacter.Modified = true;
           plugin.SelfCharacter.Status = status;
         }
 
         // Add a button to save the Self Character data
-        if (ImGui.Button("Save"))
+        if (pendingSave)
         {
-          _ = CharacterRoleplayDataService.SetCharacterAsync(plugin.SelfCharacter);
+          ImGui.Text("Saving...");
+        } else if (plugin.SelfCharacter.Modified && ImGui.Button("Save"))
+        {
+          pendingSave = true;
+          _ = plugin.CharacterRoleplayDataService.SetCharacterAsync(plugin.SelfCharacter).ContinueWith((result) => pendingSave = false);
         }
 
         ImGui.Unindent();
@@ -119,27 +121,27 @@ namespace RPBlurb
     {
       ImGui.Indent();
 
-      var tcr = plugin.TargetCharacterRequest;
-      if (tcr != null)
+      var tcrd = plugin.TargetCharacterRoleplayData;
+      if (tcrd != null)
       {
-        if (tcr.IsCompleted)
+        if (!tcrd.Invalid)
         {
-          if (tcr.Data != null)
+          if (tcrd.World != null && tcrd.User != null)
           {
-            ImGui.Text("Name: " + tcr.Data.Name);
-            ImGui.Text("World: " + tcr.Data.World);
-            ImGui.Text("Description: " + tcr.Data.Description);
-            ImGui.Text("Alignment: " + tcr.Data.Alignment);
-            ImGui.Text("Status: " + tcr.Data.Status);
+            ImGui.Text(tcrd.User + " @ " + tcrd.World);
+            ImGui.Text("Name: " + tcrd.Name);
+            ImGui.Text("Description: " + tcrd.Description);
+            ImGui.Text("Alignment: " + tcrd.Alignment);
+            ImGui.Text("Status: " + tcrd.Status);
           }
           else
           {
-            ImGui.Text("No Roleplay Sheet");
+            ImGui.Text("Loading...");
           }
         }
         else
         {
-          ImGui.Text("Loading...");
+          ImGui.Text("No Roleplay Sheet");
         }
       }
       else
@@ -166,8 +168,6 @@ namespace RPBlurb
       ImGui.Separator();
 
       DrawSelfForm();
-
-      ImGui.Separator();
     }
   }
 }

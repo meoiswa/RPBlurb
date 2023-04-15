@@ -5,9 +5,13 @@ using System;
 namespace RPBlurb
 {
   [Serializable]
-  public class ConfigurationBase : IPluginConfiguration
+  public class Configuration : IPluginConfiguration
   {
     public virtual int Version { get; set; } = 0;
+
+    public bool IsVisible { get; set; } = true;
+
+    public bool Enabled { get; set; } = true;
 
     // the below exist just to make saving less cumbersome
     [NonSerialized]

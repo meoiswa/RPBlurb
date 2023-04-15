@@ -1,43 +1,55 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Dalamud.Game;
-using Dalamud.Game.ClientState.Objects;
 using Dalamud.Logging;
+using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Firestore;
+using Google.Cloud.Firestore.V1;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace RPBlurb
 {
   public class CharacterRoleplayDataService
   {
-    private static readonly HttpClient client = new();
     private static readonly string setCharacterFunctionUrl = "https://us-central1-gwhet-box.cloudfunctions.net/setCharacter";
-    private static readonly string getCharacterFunctionUrl = "https://us-central1-gwhet-box.cloudfunctions.net/getCharacter";
 
-    private static readonly Dictionary<string, CharacterRoleplayDataRequest> Cache = new();
+    private readonly HttpClient client = new();
+    private readonly FirestoreDb db;
 
-    public static async Task<bool> SetCharacterAsync(CharacterRoleplayData character, CancellationToken cancellationToken = default)
+    private readonly Dictionary<string, CharacterRoleplayData> Cache = new();
+
+    public CharacterRoleplayDataService()
     {
+      var jsonString = File.ReadAllText(Path.Join(new FileInfo(GetType().Assembly.Location).DirectoryName, "gwhet-box-c9b5ebd697a7.json"));
+      var builder = new FirestoreClientBuilder { JsonCredentials = jsonString };
+      db = FirestoreDb.Create("gwhet-box", builder.Build());
+    }
+
+    public async Task<bool> SetCharacterAsync(CharacterRoleplayData data, CancellationToken cancellationToken = default)
+    {
+      PluginLog.LogDebug($"SetCharacterAsync: {data.World}@{data.User}. {data.Name}, {data.Description}, {data.Alignment}, {data.Status}");
       using var timeoutSource = new CancellationTokenSource(TimeSpan.FromSeconds(20));
       using var combinedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
 
       using var request = new HttpRequestMessage(HttpMethod.Post, setCharacterFunctionUrl);
 
-      var json = JsonConvert.SerializeObject(character, new JsonSerializerSettings()
+      var job = new JObject()
       {
-        ContractResolver = new DefaultContractResolver()
-        {
-          NamingStrategy = new CamelCaseNamingStrategy()
-        },
-        Formatting = Formatting.Indented
-      });
-      request.Content = new StringContent(json);
+        ["World"] = data.World,
+        ["User"] = data.User,
+        ["Name"] = data.Name,
+        ["Description"] = data.Description,
+        ["Alignment"] = data.Alignment,
+        ["Status"] = data.Status
+      };
 
-      PluginLog.Log(json);
+      var json = JsonConvert.SerializeObject(job);
+      request.Content = new StringContent(json);
 
       using var response = await client
           .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, combinedToken.Token);
@@ -55,72 +67,38 @@ namespace RPBlurb
       return true;
     }
 
-    public static CharacterRoleplayDataRequest GetCharacterRequest(string world, string name)
+    public DocumentReference GetCharacterDocRef(string world, string user)
     {
-      var uniqueKey = $"{name}@{world}";
-      var isCached = Cache.TryGetValue(uniqueKey, out CharacterRoleplayDataRequest? value);
-
-      if (isCached)
-      {
-        return value!;
-      }
-
-      PluginLog.Log($"Fetching data from server");
-      Cache[uniqueKey] = new CharacterRoleplayDataRequest(GetCharacterAsync(world, name));
-      return Cache[uniqueKey];
+      var docRef = db.Collection("rp").Document(world).Collection("characters").Document(user);
+      return docRef;
     }
 
-    public static async Task<CharacterRoleplayData?> GetCharacterAsync(string world, string name, CancellationToken cancellationToken = default)
+    public CharacterRoleplayData GetCharacter(string world, string user, bool cache = true)
     {
-      using var timeoutSource = new CancellationTokenSource(TimeSpan.FromSeconds(20));
-      using var combinedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
-
-      var job = new JObject
+      if (cache && Cache.TryGetValue("${user}@{world}", out CharacterRoleplayData value))
       {
-        ["world"] = world,
-        ["name"] = name
-      };
-
-      var jsonContent = JsonConvert.SerializeObject(job);
-
-      PluginLog.Log(jsonContent);
-
-      var content = new StringContent(jsonContent);
-
-      using var request = new HttpRequestMessage(HttpMethod.Post, getCharacterFunctionUrl);
-      request.Content = content;
-
-      using var response = await client
-          .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, combinedToken.Token);
-
-      if (response.StatusCode is System.Net.HttpStatusCode.NotFound)
-      {
-        return null;
+        return value;
       }
       else
       {
-        try
+        PluginLog.LogDebug("GetCharacter: " + user + "@" + world);
+        value = new CharacterRoleplayData(GetCharacterDocRef(world, user));
+        if (cache)
         {
-          response.EnsureSuccessStatusCode();
-          var json = await response.Content.ReadAsStringAsync(combinedToken.Token);
-          return JsonConvert.DeserializeObject<CharacterRoleplayData>(json);
+          Cache["${user}@{world}"] = value;
         }
-        catch (Exception ex)
-        {
-          PluginLog.LogError(ex.ToString());
-          return null;
-        }
+        return value;
       }
     }
 
-    public static void ClearCache()
+    public void ClearCache()
     {
       Cache.Clear();
     }
 
-    internal void RemoveCharacterRequestCache(string world, string name)
+    internal void RemoveCharacterRequestCache(string world, string user)
     {
-      var uniqueKey = $"{name}@{world}";
+      var uniqueKey = $"{user}@{world}";
       Cache.Remove(uniqueKey);
     }
   }

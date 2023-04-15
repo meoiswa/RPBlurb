@@ -40,9 +40,18 @@ namespace RPBlurb
       PluginLog.Log(json);
 
       using var response = await client
-          .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, combinedToken.Token)
-          .ConfigureAwait(false);
-      response.EnsureSuccessStatusCode();
+          .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, combinedToken.Token);
+
+      try
+      {
+        response.EnsureSuccessStatusCode();
+      }
+      catch (Exception ex)
+      {
+        PluginLog.LogError(ex.ToString());
+        return false;
+      }
+
       return true;
     }
 
@@ -82,8 +91,7 @@ namespace RPBlurb
       request.Content = content;
 
       using var response = await client
-          .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, combinedToken.Token)
-          .ConfigureAwait(false);
+          .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, combinedToken.Token);
 
       if (response.StatusCode is System.Net.HttpStatusCode.NotFound)
       {
@@ -91,9 +99,17 @@ namespace RPBlurb
       }
       else
       {
-        response.EnsureSuccessStatusCode();
-        var json = await response.Content.ReadAsStringAsync(combinedToken.Token);
-        return JsonConvert.DeserializeObject<CharacterRoleplayData>(json);
+        try
+        {
+          response.EnsureSuccessStatusCode();
+          var json = await response.Content.ReadAsStringAsync(combinedToken.Token);
+          return JsonConvert.DeserializeObject<CharacterRoleplayData>(json);
+        }
+        catch (Exception ex)
+        {
+          PluginLog.LogError(ex.ToString());
+          return null;
+        }
       }
     }
 
@@ -101,9 +117,11 @@ namespace RPBlurb
     {
       Cache.Clear();
     }
-    public static void ClearCacheElement(string key)
+
+    internal void RemoveCharacterRequestCache(string world, string name)
     {
-      Cache.Remove(key);
+      var uniqueKey = $"{name}@{world}";
+      Cache.Remove(uniqueKey);
     }
   }
 }

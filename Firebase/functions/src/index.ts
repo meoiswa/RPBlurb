@@ -63,7 +63,7 @@ export const getCharacter = functions.https.onRequest(async (req, res) => {
   const characterRef = db.collection('rp').doc(world).collection('characters').doc(name);
   const character = await characterRef.get();
   if (!character.exists) {
-    res.status(400).send({ error: 'Character does not exist' });
+    res.status(404).send({ error: 'Character does not exist' });
     return;
   }
 

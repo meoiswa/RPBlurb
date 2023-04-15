@@ -36,6 +36,7 @@ namespace RPBlurb
 
     public CharacterRoleplayData? SelfCharacter { get; set; }
     public CharacterRoleplayDataRequest? TargetCharacterRequest { get; set; }
+    public bool ForceCacheClearForTargetCharacter { get; set; }
 
     public CharacterRoleplayDataService CharacterRoleplayDataService { get; init; }
 
@@ -92,14 +93,6 @@ namespace RPBlurb
       WindowSystem.RemoveAllWindows();
 
       CommandManager.RemoveHandler(commandName);
-    }
-
-    public void PrintDebug(string message)
-    {
-      if (Configuration.DebugMessages)
-      {
-        ChatGui.Print($"RPBlurbPlugin: {message}");
-      }
     }
 
     private ConfigurationMKII LoadConfiguration()
@@ -168,6 +161,13 @@ namespace RPBlurb
         {
           var charaName = chara.Name.ToString();
           var charaWorld = chara.HomeWorld.GameData!.Name.ToString();
+
+          if (ForceCacheClearForTargetCharacter)
+          {
+            ForceCacheClearForTargetCharacter = false;
+            CharacterRoleplayDataService.RemoveCharacterRequestCache(charaWorld, charaName);
+          }
+
           TargetCharacterRequest = CharacterRoleplayDataService.GetCharacterRequest(charaWorld, charaName);
         }
       }

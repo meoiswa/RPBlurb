@@ -59,30 +59,6 @@ namespace RPBlurb
       }
     }
 
-    public void DrawDebugSection()
-    {
-      if (ImGui.CollapsingHeader("Debug Options"))
-      {
-        ImGui.Indent();
-
-        ImGui.TextWrapped("Debug Options\nUse these to test your settings.");
-
-        if (ImGui.Button("Delete Cache"))
-        {
-          CharacterRoleplayDataService.ClearCache();
-        }
-
-        var debugMessages = plugin.Configuration.DebugMessages;
-        if (ImGui.Checkbox("Debug Messages", ref debugMessages))
-        {
-          plugin.Configuration.DebugMessages = debugMessages;
-          plugin.Configuration.Save();
-        }
-
-        ImGui.Unindent();
-      }
-    }
-
     public void DrawSelfForm()
     {
       if (plugin.SelfCharacter != null)
@@ -143,9 +119,9 @@ namespace RPBlurb
     {
       ImGui.Indent();
 
-      if (plugin.TargetCharacterRequest != null)
+      var tcr = plugin.TargetCharacterRequest;
+      if (tcr != null)
       {
-        var tcr = plugin.TargetCharacterRequest;
         if (tcr.IsCompleted)
         {
           if (tcr.Data != null)
@@ -171,6 +147,11 @@ namespace RPBlurb
         ImGui.Text("No target");
       }
 
+      if (ImGui.Button("Refresh"))
+      {
+        plugin.ForceCacheClearForTargetCharacter = true;
+      }
+
       ImGui.Unindent();
     }
 
@@ -187,8 +168,6 @@ namespace RPBlurb
       DrawSelfForm();
 
       ImGui.Separator();
-
-      DrawDebugSection();
     }
   }
 }

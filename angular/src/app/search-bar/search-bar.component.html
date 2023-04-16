@@ -1,0 +1,23 @@
+<div class="example-container">
+  <mat-form-field appearance="fill">
+    <mat-label>Character Name</mat-label>
+    <input matInput #input placeholder="Gwhet Twang" [formControl]="formGroup.controls.user">
+    <button *ngIf="formGroup.controls.user" matSuffix mat-icon-button aria-label="Clear" (click)="formGroup.controls.user.setValue('')">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
+
+  <mat-form-field class="example-full-width" appearance="fill">
+    <mat-label>World</mat-label>
+    <input type="text" matInput [formControl]="formGroup.controls.world" [matAutocomplete]="auto">
+    <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
+      <mat-option *ngFor="let option of filteredWorlds$ | async" [value]="option">
+        {{option.name}}
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+  <!-- an angular material button with a magnifying glass that submits the form -->
+  <button mat-fab color="primary" matSuffix [disabled]="formGroup.invalid" aria-label="Submit" (click)="submit()">
+    <mat-icon>search</mat-icon>
+  </button>
+</div>

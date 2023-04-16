@@ -1,0 +1,34 @@
+<div class="container">
+  <mat-card class="card" *ngIf="character && character.exists">
+    <mat-card-header>
+      <mat-card-title>
+        {{ character.name || character.user }}
+      </mat-card-title>
+      <mat-card-subtitle *ngIf="character.title">
+        {{ character.title }}
+      </mat-card-subtitle>
+      <mat-card-subtitle *ngIf="character.alignment">
+        <small>«{{character.alignment}}»</small>
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content class="text-align-center">
+      <mat-divider></mat-divider>
+      <span class="status">{{character.status}}</span>
+      <mat-divider></mat-divider>
+      <pre class="pre">{{character.description}}</pre>
+    </mat-card-content>
+    <mat-card-footer>
+      <small>{{ character.user }} @ {{ character.world }}</small>
+    </mat-card-footer>
+  </mat-card>
+  <mat-card class="card" *ngIf="!character">
+    <mat-card-content>
+      Loading...
+    </mat-card-content>
+  </mat-card>
+  <mat-card class="card" *ngIf="character && !character.exists">
+    <mat-card-content>
+      No character sheet.
+    </mat-card-content>
+  </mat-card>
+</div>

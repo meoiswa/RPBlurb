@@ -1,0 +1,10 @@
+<div class="container">
+  <div class="self">
+    <rp-search-bar (selection)="searchSelf($event)" id="self"></rp-search-bar>
+    <rp-character-sheet-form *ngIf="selfSearch$ | async" [input]="selfCharacter$ | async"></rp-character-sheet-form>
+  </div>
+  <div class="others">
+    <rp-search-bar (selection)="searchOther($event)" id="other"></rp-search-bar>
+    <rp-character-sheet-card *ngIf="otherSearch$ | async" [input]="otherCharacter$ | async"></rp-character-sheet-card>
+  </div>
+</div>

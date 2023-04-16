@@ -1,0 +1,16 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.card {
+  width: 450px;
+}
+
+.form {
+  margin-top: 1em;
+  display: flex;
+  flex-direction: column;
+}

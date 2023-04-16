@@ -24,7 +24,7 @@ const validateWorldExists = async (world: string, res: functions.Response) => {
 
   if (snapshot.empty) {
     for (const world of liveWorlds) {
-      db.collection('LiveWorlds').doc(world).set({ enabled: true });
+      liveWorldsRef.doc(world).set({ enabled: true });
     }
   }
 
@@ -39,6 +39,18 @@ const validateWorldExists = async (world: string, res: functions.Response) => {
 };
 
 export const setCharacter = functions.https.onRequest(async (req, res) => {
+
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+  res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+
+  if (req.method === "OPTIONS") {
+    res.status(204).send('');
+    return;
+  }
+
+  console.log('Invoke setCharacter ', req.body);
   const body = JSON.parse(req.body);
   const world = body.World;
   const user = body.User;
@@ -48,8 +60,9 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
   const description = body.Description;
   const alignment = body.Alignment;
   const status = body.Status;
-  console.log('Invoke setCharacter ', req.body, world, user, name, description, alignment, status);
+  console.log('Parsed values:', world, user, name, nameStyle, title, alignment, status, description);
 
+  
   if (!validateParams(world, user, res)) return;
   if (!(await validateWorldExists(world, res))) return;
 

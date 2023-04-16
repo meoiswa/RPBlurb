@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "gwhet-box": {
+      "hosting": {
+        "rpblurb-spa": [
+          "rpblurb"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "gwhet-box"
+  }
+}

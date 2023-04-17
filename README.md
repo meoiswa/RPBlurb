@@ -10,7 +10,7 @@ This repo contains three subprojects:
 
 ## Web SPA
 
-Officially hosted at (rpblurb.web.app)[https://rpblurb.web.app/], this is an Angular single page application for editing and viewing character sheets.
+Officially hosted at [rpblurb.web.app](https://rpblurb.web.app/), this is an Angular single page application for editing and viewing character sheets.
 
 ## RPBlurb Plugin
 

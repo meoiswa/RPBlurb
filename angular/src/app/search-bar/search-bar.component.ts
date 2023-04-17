@@ -1,4 +1,5 @@
-import { Component, ElementRef, EventEmitter, Output } from '@angular/core';
+import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout';
+import { Component, ElementRef, EventEmitter, Input, Output } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { map, Observable, startWith, Subject, switchMap } from 'rxjs';
 import { LiveWorld } from '../models/live-world';
@@ -11,6 +12,13 @@ import { liveWorlds } from './live-worlds';
   styleUrls: ['./search-bar.component.scss']
 })
 export class SearchBarComponent {
+
+  @Input()
+  title: string = 'Search:';
+
+  isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.HandsetPortrait).pipe(
+    map(result => result.matches)
+  );
 
   form = new FormControl
 
@@ -31,6 +39,7 @@ export class SearchBarComponent {
   selection = new EventEmitter<SearchTerm>();
 
   constructor(
+    private breakpointObserver: BreakpointObserver,
     private elementRef: ElementRef) {
   }
 

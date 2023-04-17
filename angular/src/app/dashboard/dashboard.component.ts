@@ -1,6 +1,7 @@
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component } from '@angular/core';
 import { doc, docData, docSnapshots, Firestore, snapToData } from '@angular/fire/firestore';
-import { map, Observable, ReplaySubject, Subject, switchMap } from 'rxjs';
+import { map, Observable, ReplaySubject, Subject, switchMap, tap } from 'rxjs';
 import { CharacterSheet, fromCharacterSheet, toCharacterSheet } from '../models/character-sheet';
 import { SearchTerm } from '../models/search-term';
 
@@ -16,7 +17,14 @@ export class DashboardComponent {
   selfSearch$ = new ReplaySubject<SearchTerm>(1);
   selfCharacter$: Observable<{ searchTerm: SearchTerm, character: CharacterSheet }>;
 
-  constructor(private firestore: Firestore) {
+  preview: CharacterSheet | null = null;
+
+  widthSize: number = 0;
+
+  constructor(
+    private firestore: Firestore,
+    private breakpointObserver: BreakpointObserver
+  ) {
     const switchMapSearchTerm = (term: SearchTerm) => {
       const userDoc = doc(this.firestore, 'rp', term.world.name, 'characters', term.user)
         .withConverter<CharacterSheet>({
@@ -27,10 +35,10 @@ export class DashboardComponent {
       return docSnapshots(userDoc).pipe(
         map((snapshot) => {
           if (snapshot.exists()) {
-            console.log('Character sheet exists', snapshot);
+            console.debug('Character sheet exists', snapshot);
             return { searchTerm: term, character: snapshot.data() };
           } else {
-            console.log('Character sheet does not exist', snapshot);
+            console.debug('Character sheet does not exist', snapshot);
             return { searchTerm: term, character: { world: term.world.name, user: term.user, exists: false } as CharacterSheet };
           }
         })
@@ -44,15 +52,36 @@ export class DashboardComponent {
     this.selfCharacter$ = this.selfSearch$.pipe(
       switchMap(switchMapSearchTerm)
     );
+    this.breakpointObserver.observe([
+      Breakpoints.Large,
+      Breakpoints.XLarge,
+    ]).subscribe((result) => {
+
+      if (result.breakpoints[Breakpoints.Large]) {
+        this.widthSize = 1;
+      } else if (result.breakpoints[Breakpoints.XLarge]) {
+        this.widthSize = 2;
+      } else {
+        this.widthSize = 0;
+      }
+    });
+  }
+
+  ngAfterViewInit() {
+
   }
 
   public searchOther(term: SearchTerm) {
-    console.log('searchOther', term);
+    console.debug('searchOther', term);
     this.otherSearch$.next(term);
   }
 
   public searchSelf(term: SearchTerm) {
-    console.log('searchSelf', term);
+    console.debug('searchSelf', term);
     this.selfSearch$.next(term);
+  }
+
+  public nextPreview(preview: CharacterSheet) {
+    this.preview = preview;
   }
 }

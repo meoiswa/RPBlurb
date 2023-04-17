@@ -1,13 +1,25 @@
-<div class="example-container">
-  <mat-form-field appearance="fill">
+<div class="container">
+  <mat-toolbar class="toolbar">
+    <mat-toolbar-row class="with-gap">
+      <span *ngIf="!(isHandset$ | async)" class="lifted">{{title}}</span>
+      <ng-container>
+        <ng-template [ngTemplateOutlet]="form"></ng-template>
+      </ng-container>
+    </mat-toolbar-row>
+  </mat-toolbar>
+</div>
+
+<ng-template #form>
+  <mat-form-field appearance="fill" class="flex-grow user-field">
     <mat-label>Character Name</mat-label>
     <input matInput #input placeholder="Gwhet Twang" [formControl]="formGroup.controls.user">
-    <button *ngIf="formGroup.controls.user" matSuffix mat-icon-button aria-label="Clear" (click)="formGroup.controls.user.setValue('')">
+    <button *ngIf="formGroup.controls.user" matSuffix mat-icon-button aria-label="Clear"
+      (click)="formGroup.controls.user.setValue('')">
       <mat-icon>close</mat-icon>
     </button>
   </mat-form-field>
 
-  <mat-form-field class="example-full-width" appearance="fill">
+  <mat-form-field class="world-field" appearance="fill">
     <mat-label>World</mat-label>
     <input type="text" matInput [formControl]="formGroup.controls.world" [matAutocomplete]="auto">
     <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn">
@@ -17,7 +29,7 @@
     </mat-autocomplete>
   </mat-form-field>
   <!-- an angular material button with a magnifying glass that submits the form -->
-  <button mat-fab color="primary" matSuffix [disabled]="formGroup.invalid" aria-label="Submit" (click)="submit()">
+  <button mat-fab class="lifted" color="primary" matSuffix [disabled]="formGroup.invalid" aria-label="Submit" (click)="submit()">
     <mat-icon>search</mat-icon>
   </button>
-</div>
+</ng-template>

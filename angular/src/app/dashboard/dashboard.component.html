@@ -1,10 +1,19 @@
-<div class="container">
-  <div class="self">
-    <rp-search-bar (selection)="searchSelf($event)" id="self"></rp-search-bar>
-    <rp-character-sheet-form *ngIf="selfSearch$ | async" [input]="selfCharacter$ | async"></rp-character-sheet-form>
+<div class="container" [ngClass]="{'flex-row': widthSize >= 1, 'flex-column': widthSize < 1}">
+  <div class="self" [ngClass]="{ 'mat-elevation-z10': widthSize >= 1 }">
+    <rp-search-bar (selection)="searchSelf($event)" id="self" title="Edit:"></rp-search-bar>
+    <div class="center" [ngClass]="{'flex-row': widthSize >= 2, 'flex-column': widthSize < 2}">
+      <ng-container *ngIf="(selfSearch$ | async) as selfTerm">
+        <rp-character-sheet-form *ngIf="selfTerm" [input]="selfCharacter$ | async"
+          (previewCharacter)="nextPreview($event)"></rp-character-sheet-form>
+        <rp-character-sheet-card *ngIf="preview && selfTerm"
+          [input]="{ searchTerm: selfTerm, character: preview! }"></rp-character-sheet-card>
+      </ng-container>
+    </div>
   </div>
   <div class="others">
     <rp-search-bar (selection)="searchOther($event)" id="other"></rp-search-bar>
-    <rp-character-sheet-card *ngIf="otherSearch$ | async" [input]="otherCharacter$ | async"></rp-character-sheet-card>
+    <div class="center">
+      <rp-character-sheet-card *ngIf="otherSearch$ | async" [input]="otherCharacter$ | async"></rp-character-sheet-card>
+    </div>
   </div>
 </div>

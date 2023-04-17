@@ -12,16 +12,21 @@ import { CharacterSheetCardComponent } from './character-sheet-card/character-sh
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
 import { CharacterSheetFormComponent } from './character-sheet-form/character-sheet-form.component';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { LayoutModule } from '@angular/cdk/layout';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSelectModule } from '@angular/material/select';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { ToolbarComponent } from './toolbar/toolbar.component';
 
 @NgModule({
   declarations: [
@@ -29,7 +34,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
     DashboardComponent,
     SearchBarComponent,
     CharacterSheetCardComponent,
-    CharacterSheetFormComponent
+    CharacterSheetFormComponent,
+    ToolbarComponent,
   ],
   imports: [
     BrowserModule,
@@ -43,16 +49,20 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
     }),
     BrowserAnimationsModule,
     FormsModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
+    HttpClientModule,
+    LayoutModule,
     MatAutocompleteModule,
     MatButtonModule,
-    MatIconModule,
     MatCardModule,
     MatDividerModule,
-    HttpClientModule,
+    MatFormFieldModule,
+    MatGridListModule,
+    MatIconModule,
+    MatInputModule,
+    MatMenuModule,
+    MatSelectModule,
+    MatToolbarModule,
+    ReactiveFormsModule,
   ],
   providers: [
     HttpClient,

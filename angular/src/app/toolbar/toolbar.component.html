@@ -1,0 +1,26 @@
+<div class="container">
+  <mat-toolbar color="primary">
+    <mat-toolbar-row>
+      <span>Roleplay Character Sheets</span>
+      <ng-container *ngIf="!(isHandset$ | async)">
+        <ng-template [ngTemplateOutlet]="buttons"></ng-template>
+      </ng-container>
+    </mat-toolbar-row>
+    <mat-toolbar-row *ngIf="isHandset$ | async" class="example-toolbar-row-2">
+      <ng-template [ngTemplateOutlet]="buttons"></ng-template>
+    </mat-toolbar-row>
+  </mat-toolbar>
+</div>
+
+<ng-template #buttons>
+  <span class="example-spacer"></span>
+  <button mat-icon-button class="source-icon" aria-label="Sourcecode" (click)="clicked('code')">
+    <mat-icon>code</mat-icon>
+  </button>
+  <button mat-icon-button class="coffee-icon" aria-label="Author's Ko-Fi" (click)="clicked('coffee')">
+    <mat-icon>coffee</mat-icon>
+  </button>
+  <button mat-icon-button class="example-icon" aria-label="Share" (click)="clicked('share')">
+    <mat-icon>share</mat-icon>
+  </button>
+</ng-template>

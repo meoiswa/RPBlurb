@@ -9,7 +9,7 @@ const db = admin.firestore();
 
 const validateParams = (world: string, user: string, res: functions.Response) => {
   if (!world || !user) {
-    console.log('User and World are required fields', world, user);
+    console.debug('User and World are required fields', world, user);
     res.status(400).send({ error: 'User and World are required fields' });
     return false;
   }
@@ -19,7 +19,7 @@ const validateParams = (world: string, user: string, res: functions.Response) =>
 
 const validateWorldExists = async (world: string, res: functions.Response) => {
   if (!liveWorlds.includes(world)) {
-    console.log('World does not exist', world);
+    console.debug('World does not exist', world);
     res.status(400).send({ error: 'World does not exist' });
     return false;
   }
@@ -39,7 +39,7 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
     return;
   }
 
-  console.log('Invoke setCharacter ', req.body);
+  console.debug('Invoke setCharacter ', req.body);
   const body = JSON.parse(req.body);
   const world = body.World;
   const user = body.User;
@@ -49,7 +49,7 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
   const description = body.Description;
   const alignment = body.Alignment;
   const status = body.Status;
-  console.log('Parsed values:', world, user, name, nameStyle, title, alignment, status, description);
+  console.debug('Parsed values:', world, user, name, nameStyle, title, alignment, status, description);
 
 
   if (!validateParams(world, user, res)) return;
@@ -74,7 +74,7 @@ export const getCharacter = functions.https.onRequest(async (req, res) => {
   const body = JSON.parse(req.body);
   const world = body.World;
   const user = body.User;
-  console.log('Invoke getCharacter ', req.body, world, user);
+  console.debug('Invoke getCharacter ', req.body, world, user);
 
   if (!validateParams(world, user, res)) return;
   if (!(await validateWorldExists(world, res))) return;

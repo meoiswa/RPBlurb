@@ -1,9 +1,9 @@
 import { Component, ElementRef, EventEmitter, Output } from '@angular/core';
-import { collection, collectionData, Firestore } from '@angular/fire/firestore';
 import { FormControl, FormGroup } from '@angular/forms';
-import { combineLatest, map, Observable, startWith, Subject, switchMap } from 'rxjs';
+import { map, Observable, startWith, Subject, switchMap } from 'rxjs';
 import { LiveWorld } from '../models/live-world';
 import { SearchTerm } from '../models/search-term';
+import { liveWorlds } from './live-worlds';
 
 @Component({
   selector: 'rp-search-bar',
@@ -31,31 +31,21 @@ export class SearchBarComponent {
   selection = new EventEmitter<SearchTerm>();
 
   constructor(
-    private firestore: Firestore,
     private elementRef: ElementRef) {
   }
 
   ngOnInit() {
-    const itemCollection = collection(this.firestore, 'LiveWorlds').withConverter<LiveWorld>({
-      toFirestore: (item) => item,
-      fromFirestore: (snapshot, options) => {
-        const data = snapshot.data(options);
-        return { name: snapshot.ref.id, ...data } as LiveWorld;
-      }
-    });
-    const liveWorlds$ = collectionData(itemCollection);
-    this.filteredWorlds$ = combineLatest([
-      this.formGroup.controls.world.valueChanges.pipe(startWith('')),
-      liveWorlds$
-    ]).pipe(
+    const worlds = liveWorlds.map(world => ({ name: world, enabled: true } as LiveWorld));
+    this.filteredWorlds$ = this.formGroup.controls.world.valueChanges.pipe(
+      startWith(''),
       // filter the list of worlds based on the input
-      map(([input, worlds]) => {
+      map((input) => {
         if (typeof input === 'string') {
           return worlds.filter(world => world.name.toLowerCase().includes(input.toLowerCase()));
         } else {
           return worlds;
         }
-      })
+      }),
     );
 
     // load the selection from localstorage and set it as the formgroup value

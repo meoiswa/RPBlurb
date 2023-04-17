@@ -18,18 +18,7 @@ const validateParams = (world: string, user: string, res: functions.Response) =>
 };
 
 const validateWorldExists = async (world: string, res: functions.Response) => {
-  const liveWorldsRef = db.collection('LiveWorlds');
-
-  const snapshot = await liveWorldsRef.get();
-
-  if (snapshot.empty) {
-    for (const world of liveWorlds) {
-      liveWorldsRef.doc(world).set({ enabled: true });
-    }
-  }
-
-  const liveWorld = await liveWorldsRef.doc(world).get();
-  if (!liveWorld.exists) {
+  if (!liveWorlds.includes(world)) {
     console.log('World does not exist', world);
     res.status(400).send({ error: 'World does not exist' });
     return false;
@@ -62,7 +51,7 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
   const status = body.Status;
   console.log('Parsed values:', world, user, name, nameStyle, title, alignment, status, description);
 
-  
+
   if (!validateParams(world, user, res)) return;
   if (!(await validateWorldExists(world, res))) return;
 

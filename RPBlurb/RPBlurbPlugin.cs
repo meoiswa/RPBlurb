@@ -10,6 +10,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Newtonsoft.Json;
 using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Logging;
 
 namespace RPBlurb
 {
@@ -17,7 +18,8 @@ namespace RPBlurb
   {
     public string Name => "RPBlurb";
 
-    private const string commandName = "/RPBlurb";
+    private const string commandName = "/rpb";
+    private const string overlayCommandName = "/rpbo";
 
     public DalamudPluginInterface PluginInterface { get; init; }
     public CommandManager CommandManager { get; init; }
@@ -28,6 +30,8 @@ namespace RPBlurb
     public ClientState ClientState { get; init; }
     public TargetManager TargetManager { get; init; }
     public RPBlurbUI Window { get; init; }
+
+    public RPBlurbOverlay Overlay { get; set; }
 
     private CharacterRoleplayData? selfCharacter = null;
     public CharacterRoleplayData? SelfCharacter
@@ -64,7 +68,7 @@ namespace RPBlurb
       WindowSystem = new("RPBlurbPlugin");
       CharacterRoleplayDataService = new CharacterRoleplayDataService();
 
-      Configuration = LoadConfiguration();
+      Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       Configuration.Initialize(this);
 
       ClientState = Service.ClientState;
@@ -78,11 +82,19 @@ namespace RPBlurb
         IsOpen = Configuration.IsVisible
       };
 
+      Overlay = new RPBlurbOverlay(this);
+
       WindowSystem.AddWindow(Window);
+      WindowSystem.AddWindow(Overlay);
 
       CommandManager.AddHandler(commandName, new CommandInfo(OnCommand)
       {
-        HelpMessage = "opens the configuration window"
+        HelpMessage = "Opens the configuration window"
+      });
+
+      CommandManager.AddHandler(overlayCommandName, new CommandInfo(OnCommand)
+      {
+        HelpMessage = "toggles the overlay"
       });
 
       PluginInterface.UiBuilder.Draw += DrawUI;
@@ -101,11 +113,7 @@ namespace RPBlurb
       WindowSystem.RemoveAllWindows();
 
       CommandManager.RemoveHandler(commandName);
-    }
-
-    private static Configuration LoadConfiguration()
-    {
-      return new Configuration();
+      CommandManager.RemoveHandler(overlayCommandName);
     }
 
     public void SaveConfiguration()
@@ -121,10 +129,26 @@ namespace RPBlurb
 
       Window.IsOpen = Configuration.IsVisible;
     }
+    
+
+    private void SetOverlayVisible(bool isVisible)
+    {
+      Configuration.OverlayVisible = isVisible;
+      Configuration.Save();
+    }
 
     private void OnCommand(string command, string args)
     {
-      SetVisible(!Configuration.IsVisible);
+      if (command == overlayCommandName)
+      {
+        PluginLog.Debug("Overlay toggle");
+        SetOverlayVisible(!Configuration.OverlayVisible);
+      }
+      else
+      {
+        PluginLog.Debug("Configuration toggle");
+        SetVisible(!Configuration.IsVisible);
+      }
     }
 
     private void DrawUI()

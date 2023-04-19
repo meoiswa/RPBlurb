@@ -63,15 +63,37 @@ namespace RPBlurb
       plugin.Configuration.Save();
     }
 
-    private void DrawSectionMasterEnable()
+    private void DrawSectionToggles()
     {
-      // can't ref a property, so use a local copy
       var enabled = plugin.Configuration.Enabled;
       if (ImGui.Checkbox("Master Enable", ref enabled))
       {
         plugin.Configuration.Enabled = enabled;
         plugin.Configuration.Save();
       }
+    }
+
+    private void DrawSectionOverlay()
+    {
+      var overlay = plugin.Configuration.OverlayVisible;
+      if (ImGui.Checkbox("Overlay", ref overlay))
+      {
+        plugin.Configuration.OverlayVisible = overlay;
+        plugin.Configuration.Save();
+      }
+
+      ImGui.SameLine();
+      ImGui.Text("(Draggable while this window is open)");
+
+      var growUp = plugin.Configuration.OverlayGrowUp;
+      if (ImGui.Checkbox("Resize Upwards", ref growUp))
+      {
+        plugin.Configuration.OverlayGrowUp = growUp;
+        plugin.Configuration.Save();
+      }
+
+      ImGui.SameLine();
+      ImGui.Text("(Experimental)");
     }
 
     public void DrawSelfForm()
@@ -171,7 +193,8 @@ namespace RPBlurb
         if (ImGui.Button("Save"))
         {
           pendingSave = true;
-          _ = plugin.CharacterRoleplayDataService.SetCharacterAsync(plugin.SelfCharacter, (result) => {
+          _ = plugin.CharacterRoleplayDataService.SetCharacterAsync(plugin.SelfCharacter, (result) =>
+          {
             PluginLog.LogDebug($"SetCharacterAsync result: {result}");
             pendingModified = true;
           });
@@ -235,11 +258,11 @@ namespace RPBlurb
 
           if (!string.IsNullOrWhiteSpace(data.Name))
           {
-            TextCentered(data.Name);
+            ImGuiHelper.TextCentered(data.Name);
           }
           else
           {
-            TextCentered(data.User ?? "");
+            ImGuiHelper.TextCentered(data.User ?? "");
           }
 
           if (fontPushed)
@@ -250,27 +273,27 @@ namespace RPBlurb
           if (!string.IsNullOrWhiteSpace(data.Title))
           {
             ImGui.PushFont(titleStyle.ImFont);
-            TextCentered(data.Title);
+            ImGuiHelper.TextCentered(data.Title);
             ImGui.PopFont();
           }
 
           if (!string.IsNullOrWhiteSpace(data.Alignment))
           {
             ImGui.PushFont(itallicsStyle.ImFont);
-            TextCentered("\u00AB" + data.Alignment + "\u00BB");
+            ImGuiHelper.TextCentered("\u00AB" + data.Alignment + "\u00BB");
             ImGui.PopFont();
           }
 
           if (!string.IsNullOrWhiteSpace(data.Status))
           {
             ImGui.Separator();
-            TextCentered(data.Status);
+            ImGuiHelper.TextCentered(data.Status);
           }
 
           if (!string.IsNullOrWhiteSpace(data.Description))
           {
             ImGui.Separator();
-            ImGui.Text(data.Description);
+            ImGui.TextWrapped(data.Description);
           }
         }
         else
@@ -287,7 +310,11 @@ namespace RPBlurb
 
     public override void Draw()
     {
-      DrawSectionMasterEnable();
+      DrawSectionToggles();
+
+      ImGui.Separator();
+
+      DrawSectionOverlay();
 
       if (ImGui.BeginTabBar("tabs"))
       {
@@ -307,43 +334,6 @@ namespace RPBlurb
         }
         ImGui.EndTabBar();
       }
-    }
-
-    private void TextCentered(string text)
-    {
-      var windowWidth = ImGui.GetWindowSize().X;
-      var textWidth = ImGui.CalcTextSize(text).X;
-
-      ImGui.SetCursorPosX((windowWidth - textWidth) * 0.5f);
-      ImGui.Text(text);
-    }
-
-    private void TextMultilineCentered(string text, Vector4? color = null)
-    {
-      var win_width = ImGui.GetWindowSize().X;
-      var text_width = ImGui.CalcTextSize(text).X;
-
-      var text_indentation = (win_width - text_width) * 0.5f;
-
-      var min_indentation = 20.0f;
-      if (text_indentation <= min_indentation)
-      {
-        text_indentation = min_indentation;
-      }
-
-      ImGui.NewLine();
-      ImGui.SameLine(text_indentation);
-      ImGui.PushTextWrapPos(win_width - text_indentation);
-      if (color != null)
-      {
-        ImGui.PushStyleColor(ImGuiCol.Text, color.Value);
-      }
-      ImGui.TextWrapped(text);
-      if (color != null)
-      {
-        ImGui.PopStyleColor();
-      }
-      ImGui.PopTextWrapPos();
     }
   }
 }

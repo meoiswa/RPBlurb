@@ -3,8 +3,6 @@ using System;
 using System.Numerics;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.Windowing;
-using Dalamud.Logging;
-using Dalamud.Interface;
 
 namespace RPBlurb
 {
@@ -13,14 +11,13 @@ namespace RPBlurb
   public unsafe class RPBlurbOverlay : Window, IDisposable
   {
     private readonly RPBlurbPlugin plugin;
-    private GameFontHandle jupiterStyleLarge;
-    private GameFontHandle axisStyleLarge;
-    private GameFontHandle trumpGothicStyleLarge;
-    private GameFontHandle titleStyle;
-    private GameFontHandle itallicsStyle;
+    private readonly GameFontHandle jupiterStyleLarge;
+    private readonly GameFontHandle axisStyleLarge;
+    private readonly GameFontHandle trumpGothicStyleLarge;
+    private readonly GameFontHandle titleStyle;
+    private readonly GameFontHandle itallicsStyle;
 
     private float LastSizeY = 0;
-    private float LastCalculatedY = 0;
 
     public RPBlurbOverlay(RPBlurbPlugin plugin)
       : base("RPBlurb##OverlayWindow")

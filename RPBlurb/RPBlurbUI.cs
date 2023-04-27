@@ -1,15 +1,8 @@
 using Dalamud.Logging;
 using Dalamud.Interface.Windowing;
-using FFXIVClientStructs.FFXIV.Client.Game.Control;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using ImGuiNET;
 using System;
 using System.Numerics;
-using System.Linq;
-using Dalamud.Game.ClientState;
-using System.Net.Http;
-using System.Collections.Generic;
-using System.Web;
 using Dalamud.Interface.GameFonts;
 
 namespace RPBlurb
@@ -21,11 +14,11 @@ namespace RPBlurb
     private readonly RPBlurbPlugin plugin;
     private bool pendingSave;
     private bool pendingModified;
-    private GameFontHandle jupiterStyleLarge;
-    private GameFontHandle axisStyleLarge;
-    private GameFontHandle trumpGothicStyleLarge;
-    private GameFontHandle titleStyle;
-    private GameFontHandle itallicsStyle;
+    private readonly GameFontHandle jupiterStyleLarge;
+    private readonly GameFontHandle axisStyleLarge;
+    private readonly GameFontHandle trumpGothicStyleLarge;
+    private readonly GameFontHandle titleStyle;
+    private readonly GameFontHandle itallicsStyle;
 
     public RPBlurbUI(RPBlurbPlugin plugin)
       : base(

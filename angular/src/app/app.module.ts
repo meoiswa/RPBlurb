@@ -7,6 +7,7 @@ import { environment } from '../environments/environment';
 import { provideFirestore, getFirestore, connectFirestoreEmulator } from '@angular/fire/firestore';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { SearchBarComponent } from './search-bar/search-bar.component';
+import { ToolbarComponent } from './toolbar/toolbar.component';
 import { CharacterSheetCardComponent } from './character-sheet-card/character-sheet-card.component';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -26,7 +27,6 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { ToolbarComponent } from './toolbar/toolbar.component';
 
 @NgModule({
   declarations: [

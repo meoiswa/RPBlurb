@@ -14,13 +14,16 @@
 
 <ng-template #buttons>
   <span class="example-spacer"></span>
-  <button mat-icon-button class="source-icon" aria-label="Sourcecode" (click)="clicked('code')">
-    <mat-icon>code</mat-icon>
+  <button mat-icon-button class="github-icon" aria-label="Sourcecode on Github" (click)="clicked('github')">
+    <mat-icon svgIcon="github"></mat-icon>
   </button>
-  <button mat-icon-button class="coffee-icon" aria-label="Author's Ko-Fi" (click)="clicked('coffee')">
-    <mat-icon>coffee</mat-icon>
+  <button mat-icon-button class="ko-fi-icon" aria-label="Author's Ko-Fi" (click)="clicked('coffee')">
+    <mat-icon svgIcon="ko-fi"></mat-icon>
   </button>
-  <button mat-icon-button class="example-icon" aria-label="Share" (click)="clicked('share')">
-    <mat-icon>share</mat-icon>
+  <button mat-icon-button class="patreon-icon" aria-label="Author's Patreon" (click)="clicked('patreon')">
+    <mat-icon svgIcon="patreon"></mat-icon>
+  </button>
+  <button mat-icon-button class="tweet-icon" aria-label="Tweet" (click)="clicked('tweet')">
+    <mat-icon svgIcon="twitter"></mat-icon>
   </button>
 </ng-template>

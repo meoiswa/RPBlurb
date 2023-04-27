@@ -52,6 +52,7 @@ export class DashboardComponent {
     this.selfCharacter$ = this.selfSearch$.pipe(
       switchMap(switchMapSearchTerm)
     );
+
     this.breakpointObserver.observe([
       Breakpoints.Large,
       Breakpoints.XLarge,

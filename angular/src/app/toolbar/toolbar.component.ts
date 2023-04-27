@@ -18,14 +18,18 @@ export class ToolbarComponent {
 
   clicked(button: string) {
     switch (button) {
-      case 'source':
+      case 'github':
         window.open('https://github.com/meoiswa/RPBlurb', '_blank');
         break;
-      case 'coffee':
+      case 'ko-fi':
         window.open('https://ko-fi.com/meoiswa', '_blank');
         break;
-      case 'share':
-        window.open('https://twitter.com/intent/tweet?text=RPBlurb%20is%20a%20free%20tool%20to%20help%20you%20create%20and%20share%20your%20character%20sheets%20for%20roleplaying%20games.%20It%20is%20open%20source%20and%20free%20to%20use%20at%20https%3A%2F%2Frpblurb.com', '_blank');
+      case 'patreon':
+        window.open('https://patreon.com/meoiswa', '_blank');
+        break;
+      case 'tweet':
+        const text = `RPBlurb is a free tool to help you create and share your Roleplaying Character sheets in Final Fantasy XIV. Visit https://rpblurb.meoiswa.cat to create your own!`;
+        window.open('https://twitter.com/intent/tweet?text=' + encodeURI(text), '_blank');
         break;
     }
   }

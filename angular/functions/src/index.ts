@@ -56,6 +56,7 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
   if (!(await validateWorldExists(world, res))) return;
 
   const characterRef = db.collection('rp').doc(world).collection('characters').doc(user);
+  const snapshot = await characterRef.get();
   await characterRef.set({
     User: user,
     World: world,
@@ -66,7 +67,9 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
     Status: status,
     Alignment: alignment
   });
-
+  if (!snapshot.exists) {
+    db.collection('stats').doc('stats').update({ total: admin.firestore.FieldValue.increment(1) });
+  }
   res.status(200).send({ message: 'Character data set successfully' });
 });
 
@@ -87,4 +90,22 @@ export const getCharacter = functions.https.onRequest(async (req, res) => {
   }
 
   res.status(200).send(character.data());
+});
+
+export const updateStats = functions.https.onRequest(async (req, res) => {
+  console.log('Invoke updateStats');
+  const worlds = await db.collection('rp').listDocuments();
+  let total = 0;
+  const stats = {} as any;
+  for (const world of worlds) {
+    const characters = await world.collection('characters').listDocuments();
+    const count = characters.length;
+    console.log('World', world.id, 'has', count, 'characters');
+    await world.set({ Characters: count }, { merge: true });
+    total += count;
+    stats[world.id] = count;
+  }
+  stats['total'] = total;
+  db.collection('stats').doc('stats').set(stats, { merge: true });
+  res.status(200).send(stats);
 });

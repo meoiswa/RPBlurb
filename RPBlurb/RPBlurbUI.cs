@@ -226,9 +226,8 @@ namespace RPBlurb
         if (data.Loading)
         {
           ImGui.Text("Loading...");
-          return;
-        }
-        if (!data.Invalid)
+        } 
+        else if (!data.Invalid)
         {
           var fontPushed = false;
           switch (data.NameStyle ?? 0)

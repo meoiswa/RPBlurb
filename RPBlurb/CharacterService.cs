@@ -50,7 +50,6 @@ namespace RPBlurb
         ["Status"] = data.Status
       };
 
-
       var json = JsonConvert.SerializeObject(job);
       request.Content = new StringContent(json);
 

@@ -4,6 +4,7 @@ using ImGuiNET;
 using System;
 using System.Numerics;
 using Dalamud.Interface.GameFonts;
+using Dalamud.Interface;
 
 namespace RPBlurb
 {
@@ -220,7 +221,7 @@ namespace RPBlurb
 
     public void DrawDataForm(CharacterRoleplayData? data)
     {
-      ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f));
+      // ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f));
       if (data != null)
       {
         if (data.Loading)
@@ -250,11 +251,11 @@ namespace RPBlurb
 
           if (!string.IsNullOrWhiteSpace(data.Name))
           {
-            ImGuiHelper.TextCentered(data.Name);
+            ImGuiHelpers.CenteredText(data.Name);
           }
           else
           {
-            ImGuiHelper.TextCentered(data.User ?? "");
+            ImGuiHelpers.CenteredText(data.User ?? "");
           }
 
           if (fontPushed)
@@ -265,27 +266,27 @@ namespace RPBlurb
           if (!string.IsNullOrWhiteSpace(data.Title))
           {
             ImGui.PushFont(titleStyle.ImFont);
-            ImGuiHelper.TextCentered(data.Title);
+            ImGuiHelpers.CenteredText(data.Title);
             ImGui.PopFont();
           }
 
           if (!string.IsNullOrWhiteSpace(data.Alignment))
           {
             ImGui.PushFont(itallicsStyle.ImFont);
-            ImGuiHelper.TextCentered("\u00AB" + data.Alignment + "\u00BB");
+            ImGuiHelpers.CenteredText("\u00AB" + data.Alignment + "\u00BB");
             ImGui.PopFont();
           }
 
           if (!string.IsNullOrWhiteSpace(data.Status))
           {
             ImGui.Separator();
-            ImGuiHelper.TextCentered(data.Status);
+            ImGuiHelpers.CenteredText(data.Status);
           }
 
           if (!string.IsNullOrWhiteSpace(data.Description))
           {
             ImGui.Separator();
-            ImGui.TextWrapped(data.Description);
+            ImGuiHelpers.SafeTextWrapped(data.Description);
           }
         }
         else
@@ -297,7 +298,7 @@ namespace RPBlurb
       {
         ImGui.Text("No target");
       }
-      ImGui.PopStyleVar();
+      // ImGui.PopStyleVar();
     }
 
     public override void Draw()

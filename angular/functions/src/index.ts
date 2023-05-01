@@ -46,7 +46,8 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
   const name = body.Name;
   const nameStyle = body.NameStyle;
   const title = body.Title;
-  const description = body.Description;
+  const longDescription = (body.Description as string);
+  const description = longDescription.length > 512 ? longDescription.substring(0, 512) : longDescription;
   const alignment = body.Alignment;
   const status = body.Status;
   console.debug('Parsed values:', world, user, name, nameStyle, title, alignment, status, description);

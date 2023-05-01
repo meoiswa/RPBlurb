@@ -114,6 +114,8 @@ namespace RPBlurb
         Cache[key].Dispose();
       }
 
+      Cache.Clear();
+      
       GC.SuppressFinalize(this);
     }
   }

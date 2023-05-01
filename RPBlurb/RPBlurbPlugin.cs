@@ -38,14 +38,24 @@ namespace RPBlurb
     {
       get
       {
-        if (selfCharacter == null && ClientState.LocalPlayer != null && ClientState.LocalPlayer.HomeWorld.GameData != null)
+        if (ClientState.LocalPlayer != null && ClientState.LocalPlayer.HomeWorld.GameData != null)
         {
           var world = ClientState.LocalPlayer.HomeWorld.GameData.Name.ToString();
           var user = ClientState.LocalPlayer.Name.ToString();
 
-          selfCharacter = CharacterRoleplayDataService.GetCharacter(world, user, false);
-          selfCharacter.World = world;
-          selfCharacter.User = user;
+          if (selfCharacter != null && (selfCharacter.World != world || selfCharacter.User != user))
+          {
+            selfCharacter.Dispose();
+            selfCharacter = null;
+          }
+
+          if (selfCharacter == null)
+          {
+            selfCharacter = CharacterRoleplayDataService.GetCharacter(world, user, false);
+
+            selfCharacter.World = world;
+            selfCharacter.User = user;
+          }
         }
         return selfCharacter;
       }
@@ -129,7 +139,7 @@ namespace RPBlurb
 
       Window.IsOpen = Configuration.IsVisible;
     }
-    
+
 
     private void SetOverlayVisible(bool isVisible)
     {

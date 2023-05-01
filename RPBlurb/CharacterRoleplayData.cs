@@ -9,6 +9,7 @@ namespace RPBlurb
   {
     private readonly DocumentReference docRef;
     private readonly FirestoreChangeListener listener;
+    private bool disposed = false;
 
     public CharacterRoleplayData(DocumentReference docRef)
     {
@@ -22,7 +23,7 @@ namespace RPBlurb
       { 
         PluginLog.LogDebug("Document Snapshot: " + snapshot.Id);
         Loading = false; 
-        if (snapshot.Exists) 
+        if (snapshot.Exists)
         { 
           if (snapshot.TryGetValue<string>("World", out var world))
           {
@@ -36,9 +37,9 @@ namespace RPBlurb
           {
             Name = name;
           }
-          if (snapshot.TryGetValue<int>("NameStyle", out var nameStyle))
+          if (snapshot.TryGetValue<int?>("NameStyle", out var nameStyle))
           {
-            NameStyle = nameStyle;
+            NameStyle = nameStyle ?? 0;
           }
           if (snapshot.TryGetValue<string>("Title", out var title))
           {
@@ -69,7 +70,9 @@ namespace RPBlurb
 
     public void Dispose()
     {
+      if (disposed) return;
       PluginLog.LogDebug($"CharacterRoleplayData Dispose called: {User}@{World}");
+      disposed = true;
       listener.StopAsync().Wait();
       GC.SuppressFinalize(this);
     }

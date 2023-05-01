@@ -169,7 +169,7 @@ namespace RPBlurb
 
           ImGui.TableNextColumn();
           var description = plugin.SelfCharacter.Description ?? "";
-          if (ImGui.InputTextMultiline("##Description", ref description, 255, new Vector2(370, 100)))
+          if (ImGui.InputTextMultiline("##Description", ref description, 512, new Vector2(370, 100)))
           {
             plugin.SelfCharacter.Modified = true;
             plugin.SelfCharacter.Description = description;

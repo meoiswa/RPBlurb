@@ -110,7 +110,7 @@ namespace RPBlurb
           ImGui.TableNextColumn();
           var name = plugin.SelfCharacter.Name ?? "";
           ImGui.SetNextItemWidth(370);
-          if (ImGui.InputText("##Name", ref name, 255))
+          if (ImGui.InputText("##Name", ref name, 256))
           {
             plugin.SelfCharacter.Modified = true;
             plugin.SelfCharacter.Name = name;
@@ -134,7 +134,7 @@ namespace RPBlurb
           ImGui.TableNextColumn();
           var title = plugin.SelfCharacter.Title ?? "";
           ImGui.SetNextItemWidth(370);
-          if (ImGui.InputText("##Title", ref title, 255))
+          if (ImGui.InputText("##Title", ref title, 256))
           {
             plugin.SelfCharacter.Modified = true;
             plugin.SelfCharacter.Title = title;
@@ -146,7 +146,7 @@ namespace RPBlurb
           ImGui.TableNextColumn();
           var alignment = plugin.SelfCharacter.Alignment ?? "";
           ImGui.SetNextItemWidth(370);
-          if (ImGui.InputText("##Alignment", ref alignment, 255))
+          if (ImGui.InputText("##Alignment", ref alignment, 256))
           {
             plugin.SelfCharacter.Modified = true;
             plugin.SelfCharacter.Alignment = alignment;
@@ -158,7 +158,7 @@ namespace RPBlurb
           ImGui.TableNextColumn();
           var status = plugin.SelfCharacter.Status ?? "";
           ImGui.SetNextItemWidth(370);
-          if (ImGui.InputText("##Status", ref status, 255))
+          if (ImGui.InputText("##Status", ref status, 256))
           {
             plugin.SelfCharacter.Modified = true;
             plugin.SelfCharacter.Status = status;

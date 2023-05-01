@@ -12,43 +12,46 @@
       <div class="form">
         <mat-form-field class="example-form-field">
           <mat-label>Name</mat-label>
-          <input matInput type="text" [formControl]="formGroup.controls.name">
+          <input matInput type="text" [formControl]="formGroup.controls.name" maxlength=256>
           <button *ngIf="character.name" matSuffix mat-icon-button aria-label="Clear" (click)="character.name=''">
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
         <mat-form-field class="example-form-field">
           <mat-label>Title</mat-label>
-          <input matInput type="text" [formControl]="formGroup.controls.title">
+          <input matInput type="text" [formControl]="formGroup.controls.title" maxlength=256>
           <button *ngIf="character.title" matSuffix mat-icon-button aria-label="Clear" (click)="character.title=''">
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
         <mat-form-field class="example-form-field">
           <mat-label>Alignment</mat-label>
-          <input matInput type="text" [formControl]="formGroup.controls.alignment">
-          <button *ngIf="character.alignment" matSuffix mat-icon-button aria-label="Clear" (click)="character.alignment=''">
+          <input matInput type="text" [formControl]="formGroup.controls.alignment" maxlength=256>
+          <button *ngIf="character.alignment" matSuffix mat-icon-button aria-label="Clear"
+            (click)="character.alignment=''">
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
         <mat-form-field class="example-form-field">
           <mat-label>Status</mat-label>
-          <input matInput type="text" [formControl]="formGroup.controls.status">
+          <input matInput type="text" [formControl]="formGroup.controls.status" maxlength=256>
           <button *ngIf="character.status" matSuffix mat-icon-button aria-label="Clear" (click)="character.status=''">
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
         <mat-form-field class="example-full-width">
           <mat-label>Description</mat-label>
-          <textarea matInput [formControl]="formGroup.controls.description"></textarea>
-          <button *ngIf="character.description" matSuffix mat-icon-button aria-label="Clear" (click)="character.description=''">
+          <textarea matInput [formControl]="formGroup.controls.description" maxlength=512></textarea>
+          <button *ngIf="character.description" matSuffix mat-icon-button aria-label="Clear"
+            (click)="character.description=''">
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
       </div>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-raised-button color="primary" [disabled]="saving || !formGroup.dirty" (click)="submit()">Submit</button>
+      <button mat-raised-button color="primary" [disabled]="saving || !formGroup.dirty"
+        (click)="submit()">Submit</button>
     </mat-card-actions>
   </mat-card>
 </div>

@@ -39,17 +39,20 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
     return;
   }
 
+  const trimLength = (str: string, length: number): string => {
+    return str.length > length ? str.substring(0, length) : str;
+  }
+
   console.debug('Invoke setCharacter ', req.body);
   const body = JSON.parse(req.body);
   const world = body.World;
-  const user = body.User;
-  const name = body.Name;
-  const nameStyle = body.NameStyle;
-  const title = body.Title;
-  const longDescription = (body.Description as string);
-  const description = longDescription.length > 512 ? longDescription.substring(0, 512) : longDescription;
-  const alignment = body.Alignment;
-  const status = body.Status;
+  const user = trimLength(body.User, 256);
+  const name = trimLength(body.Name, 256);
+  const nameStyle = trimLength(body.NameStyle, 256);
+  const title = trimLength(body.Title, 256);
+  const description = trimLength(body.Description, 512);
+  const alignment = trimLength(body.Alignment, 256);
+  const status = trimLength(body.Status, 256);
   console.debug('Parsed values:', world, user, name, nameStyle, title, alignment, status, description);
 
 

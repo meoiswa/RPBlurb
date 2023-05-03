@@ -1,15 +1,21 @@
-import { liveWorlds } from './live-worlds';
+import { GoogleAuth } from 'google-auth-library';
+import { google } from 'googleapis';
 
 import * as functions from "firebase-functions";
-
 import * as admin from "firebase-admin";
-admin.initializeApp();
 
+import { liveWorlds } from './live-worlds';
+
+const billing = google.cloudbilling('v1').projects
+const PROJECT_ID = process.env.GCLOUD_PROJECT
+const PROJECT_NAME = `projects/${PROJECT_ID}`
+
+admin.initializeApp();
 const db = admin.firestore();
 
 const validateParams = (world: string, user: string, res: functions.Response) => {
   if (!world || !user) {
-    console.debug('User and World are required fields', world, user);
+    functions.logger.debug('User and World are required fields', world, user);
     res.status(400).send({ error: 'User and World are required fields' });
     return false;
   }
@@ -19,7 +25,7 @@ const validateParams = (world: string, user: string, res: functions.Response) =>
 
 const validateWorldExists = async (world: string, res: functions.Response) => {
   if (!liveWorlds.includes(world)) {
-    console.debug('World does not exist', world);
+    functions.logger.debug('World does not exist', world);
     res.status(400).send({ error: 'World does not exist' });
     return false;
   }
@@ -40,10 +46,11 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
   }
 
   const trimLength = (str: string, length: number): string => {
+    if (!str) return str;
     return str.length > length ? str.substring(0, length) : str;
   }
 
-  console.debug('Invoke setCharacter ', req.body);
+  functions.logger.debug('Invoke setCharacter ', req.body);
   const body = JSON.parse(req.body);
   const world = body.World;
   const user = trimLength(body.User, 256);
@@ -53,7 +60,7 @@ export const setCharacter = functions.https.onRequest(async (req, res) => {
   const description = trimLength(body.Description, 512);
   const alignment = trimLength(body.Alignment, 256);
   const status = trimLength(body.Status, 256);
-  console.debug('Parsed values:', world, user, name, nameStyle, title, alignment, status, description);
+  functions.logger.debug('Parsed values:', world, user, name, nameStyle, title, alignment, status, description);
 
 
   if (!validateParams(world, user, res)) return;
@@ -81,7 +88,7 @@ export const getCharacter = functions.https.onRequest(async (req, res) => {
   const body = JSON.parse(req.body);
   const world = body.World;
   const user = body.User;
-  console.debug('Invoke getCharacter ', req.body, world, user);
+  functions.logger.debug('Invoke getCharacter ', req.body, world, user);
 
   if (!validateParams(world, user, res)) return;
   if (!(await validateWorldExists(world, res))) return;
@@ -97,14 +104,14 @@ export const getCharacter = functions.https.onRequest(async (req, res) => {
 });
 
 export const updateStats = functions.https.onRequest(async (req, res) => {
-  console.log('Invoke updateStats');
+  functions.logger.debug('Invoke updateStats');
   const worlds = await db.collection('rp').listDocuments();
   let total = 0;
   const stats = {} as any;
   for (const world of worlds) {
     const characters = await world.collection('characters').listDocuments();
     const count = characters.length;
-    console.log('World', world.id, 'has', count, 'characters');
+    functions.logger.debug('World', world.id, 'has', count, 'characters');
     await world.set({ Characters: count }, { merge: true });
     total += count;
     stats[world.id] = count;
@@ -112,4 +119,43 @@ export const updateStats = functions.https.onRequest(async (req, res) => {
   stats['total'] = total;
   db.collection('stats').doc('stats').set(stats, { merge: true });
   res.status(200).send(stats);
+});
+
+const _setAuthCredentials = () => {
+  const client = new GoogleAuth({
+    scopes: ['https://www.googleapis.com/auth/cloud-billing', 'https://www.googleapis.com/auth/cloud-platform'],
+  })
+
+  google.options({ auth: client });
+}
+
+const disableBilling = async () => {
+  _setAuthCredentials()
+
+  if (PROJECT_NAME) {
+      const billingInfo = await billing.getBillingInfo({ name: PROJECT_NAME })
+      if (billingInfo.data.billingEnabled) {
+          try {
+              await billing.updateBillingInfo({
+                  name: PROJECT_NAME,
+                  requestBody: { billingAccountName: '' },
+              })
+              functions.logger.info(`✂️ ${PROJECT_NAME} billing account has been removed`)
+          } catch (error) {
+              functions.logger.error(error)
+          }
+      } else {
+          console.log('👉 looks like you already disabled billing')
+      }
+  }
+}
+
+export const billingMonitor = functions.pubsub.topic('billing').onPublish(async (message) => {
+  const pubsubData = JSON.parse(Buffer.from(message.data, 'base64').toString())
+  const { costAmount, budgetAmount, currencyCode } = pubsubData
+
+  functions.logger.info(`Project current cost is: ${costAmount}${currencyCode} out of ${budgetAmount}${currencyCode}`)
+  if (budgetAmount < costAmount) await disableBilling()
+
+  return null // returns nothing
 });

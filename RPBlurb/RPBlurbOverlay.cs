@@ -4,6 +4,7 @@ using System.Numerics;
 using Dalamud.Interface.GameFonts;
 using Dalamud.Interface.Windowing;
 using Dalamud.Interface;
+using Dalamud.Game.ClientState.Conditions;
 
 namespace RPBlurb
 {
@@ -58,7 +59,8 @@ namespace RPBlurb
     {
       IsOpen = plugin.Configuration.Enabled &&
         plugin.Configuration.OverlayVisible &&
-        (plugin.TargetCharacterRoleplayData != null || plugin.Configuration.IsVisible);
+        (plugin.TargetCharacterRoleplayData != null || plugin.Configuration.IsVisible) &&
+        (plugin.Configuration.OverlayShownInCombat || !plugin.Condition[ConditionFlag.InCombat]);
     }
 
     public void DrawDataForm(CharacterRoleplayData? data)

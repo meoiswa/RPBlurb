@@ -17,6 +17,8 @@ namespace RPBlurb
 
     public bool OverlayGrowUp { get; set; } = false;
 
+    public bool OverlayShownInCombat { get; set; } = false;
+
     // the below exist just to make saving less cumbersome
     [NonSerialized]
     private RPBlurbPlugin? plugin;

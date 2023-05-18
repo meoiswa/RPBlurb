@@ -88,6 +88,13 @@ namespace RPBlurb
 
       ImGui.SameLine();
       ImGui.Text("(Experimental)");
+
+      var overlayInCombat = plugin.Configuration.OverlayShownInCombat;
+      if (ImGui.Checkbox("Show Overlay in combat", ref overlayInCombat))
+      {
+        plugin.Configuration.OverlayShownInCombat = overlayInCombat;
+        plugin.Configuration.Save();
+      }
     }
 
     public void DrawSelfForm()

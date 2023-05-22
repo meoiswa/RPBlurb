@@ -1,6 +1,7 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { Component, inject } from '@angular/core';
+import { Auth, user } from '@angular/fire/auth';
+import { map, Observable, Subscription } from 'rxjs';
 
 @Component({
   selector: 'rp-toolbar',
@@ -9,11 +10,15 @@ import { map, Observable } from 'rxjs';
 })
 export class ToolbarComponent {
 
+  private auth: Auth = inject(Auth);
+  user$ = user(this.auth);
+
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.HandsetPortrait).pipe(
     map(result => result.matches)
   );
 
-  constructor(private breakpointObserver: BreakpointObserver) { }
+  constructor(private breakpointObserver: BreakpointObserver) {
+  }
 
 
   clicked(button: string) {
@@ -34,5 +39,7 @@ export class ToolbarComponent {
     }
   }
 
-
+  public logout() {
+    this.auth.signOut();
+  }
 }

@@ -1,4 +1,16 @@
 <div class="container mat-app-background">
   <rp-toolbar></rp-toolbar>
-  <rp-dashboard></rp-dashboard>
+  <ng-container *ngIf="!isLoading; else loading">
+    <rp-dashboard *ngIf="isLoggedIn; else signin"></rp-dashboard>
+  </ng-container>
 </div>
+
+<ng-template #loading>
+  <div class="center">
+    Loading...
+  </div>
+</ng-template>
+
+<ng-template #signin>
+  <rp-signin *ngIf="!isPendingEmailLogin"></rp-signin>
+</ng-template>

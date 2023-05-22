@@ -1,0 +1,20 @@
+<h1 mat-dialog-title>Email Login</h1>
+<div mat-dialog-content>
+  <p>Please enter your email:</p>
+  <form class="example-form">
+    <mat-form-field class="example-full-width">
+      <mat-label>Email</mat-label>
+      <input type="email" matInput [formControl]="emailFormControl" placeholder="Ex. pat@example.com">
+      <mat-error *ngIf="emailFormControl.hasError('email') && !emailFormControl.hasError('required')">
+        Please enter a valid email address
+      </mat-error>
+      <mat-error *ngIf="emailFormControl.hasError('required')">
+        Email is <strong>required</strong>
+      </mat-error>
+    </mat-form-field>
+  </form>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onNoClick()">Cancel</button>
+  <button [disabled]="emailFormControl.invalid" mat-button [mat-dialog-close]="emailFormControl.value" cdkFocusInitial>Submit</button>
+</div>

@@ -1,0 +1,23 @@
+<div class="container">
+  <div class="dialog">
+    <mat-card class="card">
+      <mat-card-header>
+        <mat-card-title>
+          Sign in required.
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        To use RPBlurb, you first must sign in with your prefered Provider.
+        <mat-divider></mat-divider>
+        <div class="center" *ngIf="!loading; else loadingMessage">
+          <button mat-button (click)="signInGoogle()"><mat-icon svgIcon="google"></mat-icon>Google</button>
+          <button mat-button (click)="signInEmail()"><mat-icon fontIcon="mail"></mat-icon>Email</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+
+<ng-template #loadingMessage>
+  Loading...
+</ng-template>

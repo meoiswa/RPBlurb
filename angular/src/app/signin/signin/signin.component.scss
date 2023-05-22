@@ -1,0 +1,11 @@
+.container {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  min-height: calc(100% - 65px);
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+}

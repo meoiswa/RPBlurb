@@ -1,9 +1,8 @@
 import { Component, inject } from '@angular/core';
-import { Auth, sendSignInLinkToEmail, signInWithPopup, GoogleAuthProvider } from '@angular/fire/auth';
+import { Auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from '@angular/fire/auth';
 import { MatDialog } from '@angular/material/dialog';
-import { CloseDialogComponent } from '../close-dialog/close-dialog/close-dialog.component';
-import { EmailDialogComponent } from '../email-dialog/email-dialog/email-dialog.component';
-
+import { error } from 'firebase-functions/logger';
+import { FormControl, Validators } from '@angular/forms';
 
 @Component({
   selector: 'rp-signin',
@@ -16,35 +15,46 @@ export class SigninComponent {
 
   public loading = false;
 
+  emailFormControl = new FormControl('', [Validators.required, Validators.email]);
+  passwordFormControl = new FormControl('', [Validators.required, Validators.minLength(6)]);
+
   constructor(public dialog: MatDialog) { }
 
-  public signInEmail() {
-    const dialogRef = this.dialog.open(EmailDialogComponent);
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.length > 0) {
-        this.loading = true;
-        console.log(`Dialog result: ${result}`);
-        localStorage.setItem('emailForSignIn', result);
-        sendSignInLinkToEmail(this.auth, result, {
-          url: window.location.href,
-          handleCodeInApp: true,
-        }).then(() => {
-          const closeRef = this.dialog.open(CloseDialogComponent);
-
-          closeRef.afterClosed().subscribe(() => {
-            this.loading = false;
-          });
+  public onSignInClick() {
+    if (this.emailFormControl.value && this.passwordFormControl.value) {
+      this.loading = true;
+      signInWithEmailAndPassword(this.auth, this.emailFormControl.value, this.passwordFormControl.value)
+        .catch((error) => {
+          if (error.code === 'auth/user-not-found') {
+            createUserWithEmailAndPassword(this.auth, this.emailFormControl.value!, this.passwordFormControl.value!)
+              .catch((error) => {
+                this.loading = false;
+                if (error.code === 'auth/invalid-email') {
+                  alert('Invalid email');
+                } else if (error.code === 'auth/weak-password') {
+                  alert('Weak password');
+                } else {
+                  alert(error.message);
+                }
+                console.error(error);
+              });
+          } else if (error.code === 'auth/wrong-password') {
+            alert('Wrong password');
+          } else if (error.code === 'auth/invalid-email') {
+            alert('Invalid email');
+          } else if (error.code === 'auth/too-many-requests') {
+            alert('Your account has been disabled due to too many failed requests, pelase use the Forgot Password? function to reset your password');
+          } else {
+            alert(error.message);
+          }
+          this.loading = false;
+          console.error(error);
         });
-      }
-    });
+    }
   }
 
-  public signInGoogle() {
-    this.loading = true;
+  public onForgotClick() {
 
-    signInWithPopup(this.auth, new GoogleAuthProvider()).then((result) => {
-      console.log('Logged in with Google: ', result);
-    });
   }
+
 }

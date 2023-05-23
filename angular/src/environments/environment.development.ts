@@ -12,6 +12,7 @@ export const environment = {
   },
   functions: {
     setCharacterFunctionUrl: "http://127.0.0.1:5001/gwhet-box/us-central1/setCharacter",
+    verifyCharacterFunctionUrl: "http://127.0.0.1:5001/gwhet-box/us-central1/verifyCharacter",
   },
-  useEmulators: false,
+  useEmulators: true,
 };

@@ -17,7 +17,6 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { CharacterSheetFormComponent } from './character-sheet-form/character-sheet-form.component';
-import { Location } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { LayoutModule } from '@angular/cdk/layout';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -32,8 +31,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatDialogModule } from '@angular/material/dialog';
-import { EmailDialogComponent } from './signin/email-dialog/email-dialog/email-dialog.component';
-import { CloseDialogComponent } from './signin/close-dialog/close-dialog/close-dialog.component';
+import { VerifyDialogComponent } from './verify-dialog/verify-dialog/verify-dialog.component';
 
 @NgModule({
   declarations: [
@@ -44,8 +42,7 @@ import { CloseDialogComponent } from './signin/close-dialog/close-dialog/close-d
     CharacterSheetFormComponent,
     ToolbarComponent,
     SigninComponent,
-    EmailDialogComponent,
-    CloseDialogComponent,
+    VerifyDialogComponent,
   ],
   imports: [
     BrowserModule,

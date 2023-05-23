@@ -5,6 +5,9 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { Location } from '@angular/common';
+import { SearchTerm } from './models/search-term';
+import { VerifyDialogComponent } from './verify-dialog/verify-dialog/verify-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'rp-root',
@@ -18,7 +21,7 @@ export class AppComponent {
   user$ = user(this.auth);
   userSubscription: Subscription;
 
-  isPendingEmailLogin = false;
+  isPendingValidation = false;
   isLoggedIn = false;
   isLoading = true;
 
@@ -26,6 +29,7 @@ export class AppComponent {
     private matIconRegistry: MatIconRegistry,
     private sanitizer: DomSanitizer,
     private location: Location,
+    private dialog: MatDialog
   ) {
     this.matIconRegistry.addSvgIcon(
       'patreon',
@@ -52,20 +56,35 @@ export class AppComponent {
       console.log('User$: ', aUser);
       this.isLoading = false;
       this.isLoggedIn = !!aUser;
-    });
 
-    if (isSignInWithEmailLink(this.auth, window.location.href)) {
-      this.isPendingEmailLogin = true;
-      signInWithEmailLink(this.auth, localStorage.getItem('emailForSignIn') || '', window.location.href).then((result) => {
-        console.log('Logged in with email link: ', result);
-      }).catch((err) => {
-        console.error('Error logging in with email link: ', err);
-        this.isPendingEmailLogin = false;
-      }).finally(() => {
-        window.localStorage.removeItem('emailForSignIn');
-        this.location.replaceState('/');
-      });
-    }
+      if (aUser && window.location.href.includes('/xivauth/verify')) {
+        this.isPendingValidation = true;
+        var verifyStateJson = localStorage.getItem('verify-character');
+        if (verifyStateJson) {
+          var verifyState = JSON.parse(verifyStateJson) as SearchTerm;
+          if (verifyState) {
+            var code = new URL(window.location.href).searchParams.get('code');
+            if (code) {
+              console.log('Validating Character: Got Authorization Code', verifyState, code);
+              var dialogRef = this.dialog.open(VerifyDialogComponent, {
+                disableClose: true,
+                closeOnNavigation: false,
+                data: {
+                  user: verifyState.user,
+                  world: verifyState.world.name,
+                  xivauth: code,
+                  uid: aUser.uid
+                }
+              });
+              dialogRef.afterClosed().subscribe((result) => {
+                this.isPendingValidation = false;
+                this.location.replaceState('/');
+              });
+            }
+          }
+        }
+      }
+    });
   }
 
   ngOnDestroy() {

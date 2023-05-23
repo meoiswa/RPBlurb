@@ -1,6 +1,7 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { HttpClient } from '@angular/common/http';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Auth } from '@angular/fire/auth';
 import { FormControl, FormGroup } from '@angular/forms';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -16,10 +17,14 @@ import { SearchTerm } from '../models/search-term';
 })
 export class CharacterSheetFormComponent extends CharacterSheetCardComponent {
 
+  private auth: Auth = inject(Auth);
+
   saving: boolean = false;
   unmodified: boolean = true;
 
   useFlexColumn: boolean = false;
+
+  owned: boolean = false;
 
   formGroup = new FormGroup({
     world: new FormControl<string | LiveWorld>(''),
@@ -53,11 +58,18 @@ export class CharacterSheetFormComponent extends CharacterSheetCardComponent {
     if (value) {
       this._searchTerm = value.searchTerm;
 
+      if (value.character.uids) {
+        //TODO: hash UIDs:
+        console.log('UIDs:', value.character.uids);
+        this.owned = value.character.uids.includes(this.auth.currentUser!.uid);
+      } else {
+        this.owned = false;
+      }
+
       if (value.character.exists) {
         console.debug('Existing character sheet:', value);
         this._character = value.character;
       } else {
-        console.debug('No character sheet, creating...', value);
         this._character = {
           world: value.searchTerm.world.name,
           user: value.searchTerm.user,
@@ -68,7 +80,9 @@ export class CharacterSheetFormComponent extends CharacterSheetCardComponent {
           status: '',
           description: '',
           exists: false,
+          uids: [],
         }
+        console.debug('No character sheet, created:', this._character);
       }
       this.formGroup.patchValue(value.character);
     }
@@ -87,14 +101,19 @@ export class CharacterSheetFormComponent extends CharacterSheetCardComponent {
     });
   }
   // serializes the character sheet and posts it to the server
-  public submit() {
+  public onSubmitClick() {
+    if (!this.searchTerm) {
+      console.error('No Search Term!');
+      return
+    }
     console.debug('Environment: ', environment);
     const value = this.formGroup.value as CharacterSheet;
+    console.debug('Setting character sheet: ', value);
     if (value && !this.saving) {
       this.saving = true;
       this.httpClient.post(
         environment.functions.setCharacterFunctionUrl,
-        JSON.stringify(fromCharacterSheet(value)),
+        JSON.stringify({ uid: this.auth.currentUser!.uid, ...fromCharacterSheet(value) }),
       ).subscribe({
         next: (result) => {
           this.saving = false;
@@ -108,5 +127,21 @@ export class CharacterSheetFormComponent extends CharacterSheetCardComponent {
         }
       });
     }
+  }
+
+  public onVerifyClick() {
+    var state = JSON.stringify(this.searchTerm);
+    localStorage.setItem('verify-character', state);
+    console.log('Saved verification state: ', state);
+
+    var host = 'https://edge.xivauth.net';
+    var client_id = '_XZHkD-qezoh4_xvRMGk2DJcdqvZhsv0WPhqgDo9uV4';
+    var redirect_uri = window.location.origin + '/xivauth/verify';
+    var response_type = 'code';
+    var scope = 'character:all';
+
+    var url = `${host}/oauth/authorize?client_id=${encodeURIComponent(client_id)}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=${encodeURIComponent(response_type)}&scope=${encodeURIComponent(scope)}`;
+    console.log('Redirecting to: ', url);
+    window.location.href = url;
   }
 }

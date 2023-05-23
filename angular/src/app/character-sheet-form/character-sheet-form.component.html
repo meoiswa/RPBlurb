@@ -5,11 +5,16 @@
         {{ character.user }} @ {{ character.world }}
       </mat-card-title>
       <mat-card-subtitle>
-        Leave fields empty to hide them.
+        <ng-container *ngIf="owned; else verify">
+          Leave fields empty to hide them.
+        </ng-container>
+        <ng-template #verify>
+          You must validate with XIVAuth to edit this sheet.
+        </ng-template>
       </mat-card-subtitle>
     </mat-card-header>
     <mat-card-content class="text-align-center">
-      <div class="form">
+      <div class="form" *ngIf="owned">
         <mat-form-field class="example-form-field">
           <mat-label>Name</mat-label>
           <input matInput type="text" [formControl]="formGroup.controls.name" maxlength=256>
@@ -50,8 +55,10 @@
       </div>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-raised-button color="primary" [disabled]="saving || !formGroup.dirty"
-        (click)="submit()">Submit</button>
+      <button mat-raised-button color="primary" *ngIf="!owned"
+        (click)="onVerifyClick()">Verify with XIVAuth</button>
+      <button mat-raised-button color="primary" [disabled]="saving || !formGroup.dirty" *ngIf="owned"
+        (click)="onSubmitClick()">Submit</button>
     </mat-card-actions>
   </mat-card>
 </div>

@@ -12,6 +12,7 @@ export const environment = {
   },
   functions: {
     setCharacterFunctionUrl: "https://us-central1-gwhet-box.cloudfunctions.net/setCharacter",
+    verifyCharacterFunctionUrl: "https://us-central1-gwhet-box.cloudfunctions.net/verifyCharacter",
   },
   useEmulators: false,
 };

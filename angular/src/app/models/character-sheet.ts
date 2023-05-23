@@ -10,6 +10,7 @@ export interface CharacterSheet {
   status: string;
   description: string;
   exists: boolean;
+  uids?: string[];
 }
 
 export const toCharacterSheet = (snapshot: QueryDocumentSnapshot<DocumentData>, options?: SnapshotOptions) => {
@@ -23,7 +24,8 @@ export const toCharacterSheet = (snapshot: QueryDocumentSnapshot<DocumentData>, 
     alignment: data['Alignment'],
     status: data['Status'],
     description: data['Description'],
-    exists: true,
+    uids: data['Uids'],
+    exists: data['User'] !== undefined && data['World'] !== undefined,
   } as CharacterSheet;
 }
 
@@ -36,6 +38,6 @@ export const fromCharacterSheet = (item: CharacterSheet) => {
     Title: item.title,
     Alignment: item.alignment,
     Status: item.status,
-    Description: item.description,
+    Description: item.description
   }
 }

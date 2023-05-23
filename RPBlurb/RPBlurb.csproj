@@ -67,5 +67,6 @@
       <Private>false</Private>
     </Reference>
     <PackageReference Include="Google.Cloud.Firestore" Version="3.2.0" />
+    <PackageReference Include="FirebaseAuthentication.net" Version="4.0.2" />
   </ItemGroup>
 </Project>

@@ -1,19 +1,45 @@
 <div class="container">
   <div class="dialog">
-    <mat-card class="card">
+    <mat-card class="card" *ngIf="!loading; else loadingMessage">
       <mat-card-header>
         <mat-card-title>
           Sign in required.
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        To use RPBlurb, you first must sign in with your prefered Provider.
+        <p>To use RPBlurb, you first must sign in with an email.</p>
+        <p>An account will be created if it doesn't already exist</p>
         <mat-divider></mat-divider>
-        <div class="center" *ngIf="!loading; else loadingMessage">
-          <button mat-button (click)="signInGoogle()"><mat-icon svgIcon="google"></mat-icon>Google</button>
-          <button mat-button (click)="signInEmail()"><mat-icon fontIcon="mail"></mat-icon>Email</button>
+        <div class="center">
+          <form class="example-form">
+            <mat-form-field class="example-full-width">
+              <mat-label>Email</mat-label>
+              <input type="email" matInput [formControl]="emailFormControl" placeholder="Ex. pat@example.com">
+              <mat-error *ngIf="emailFormControl.hasError('email') && !emailFormControl.hasError('required')">
+                Please enter a valid email address
+              </mat-error>
+              <mat-error *ngIf="emailFormControl.hasError('required')">
+                Email is <strong>required</strong>
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field class="example-full-width">
+              <mat-label>Password</mat-label>
+              <input type="password" matInput [formControl]="passwordFormControl" placeholder="secure password">
+              <mat-error *ngIf="passwordFormControl.hasError('length') && !passwordFormControl.hasError('required')">
+                Password must be at least 6 characters long
+              </mat-error>
+              <mat-error *ngIf="passwordFormControl.hasError('required')">
+                Password is <strong>required</strong>
+              </mat-error>
+            </mat-form-field>
+          </form>
         </div>
       </mat-card-content>
+      <mat-card-actions *ngIf="!loading">
+        <button [disabled]="emailFormControl.invalid || passwordFormControl.invalid" mat-button (click)="onSignInClick()">Sign In</button>
+        <span class="spacer"></span>
+        <button [disabled]="emailFormControl.invalid" mat-button (click)="onForgotClick()">Forgot Password?</button>
+      </mat-card-actions>
     </mat-card>
   </div>
 </div>

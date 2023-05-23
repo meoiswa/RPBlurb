@@ -19,15 +19,19 @@ namespace RPBlurb
 
     public bool OverlayShownInCombat { get; set; } = false;
 
+    public string Email { get; set; } = "";
+
+    public bool HideEmail { get; set; } = true;
+
     // the below exist just to make saving less cumbersome
     [NonSerialized]
     private RPBlurbPlugin? plugin;
 
     public void Initialize(RPBlurbPlugin plugin) => this.plugin = plugin;
-    
+
     public void Save()
     {
       plugin!.SaveConfiguration();
     }
-  } 
+  }
 }

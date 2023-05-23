@@ -5,13 +5,13 @@ using Google.Cloud.Firestore;
 
 namespace RPBlurb
 {
-  public class CharacterRoleplayData : IDisposable
+  public class CloudCharacterRoleplayData : ICharacterRoleplayData
   {
     private readonly DocumentReference docRef;
     private readonly FirestoreChangeListener listener;
     private bool disposed = false;
 
-    public CharacterRoleplayData(DocumentReference docRef)
+    public CloudCharacterRoleplayData(DocumentReference docRef)
     {
       this.docRef = docRef;
       listener = CreateListener();

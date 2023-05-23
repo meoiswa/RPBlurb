@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Logging;
-using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Google.Cloud.Firestore.V1;
 using Newtonsoft.Json;
@@ -14,25 +12,25 @@ using Newtonsoft.Json.Linq;
 
 namespace RPBlurb
 {
-  public class CharacterRoleplayDataService : IDisposable
+  public class CloudCharacterRoleplayDataService : IDisposable
   {
     private static readonly string setCharacterFunctionUrl = "https://us-central1-gwhet-box.cloudfunctions.net/setCharacter";
 
     private readonly HttpClient client = new();
     private readonly FirestoreDb db;
+    private readonly Dictionary<string, ICharacterRoleplayData> Cache = new();
 
-    private readonly Dictionary<string, CharacterRoleplayData> Cache = new();
-
-    public CharacterRoleplayDataService()
+    public CloudCharacterRoleplayDataService()
     {
       var jsonString = File.ReadAllText(Path.Join(new FileInfo(GetType().Assembly.Location).DirectoryName, "gwhet-box-c9b5ebd697a7.json"));
       var builder = new FirestoreClientBuilder { JsonCredentials = jsonString };
       db = FirestoreDb.Create("gwhet-box", builder.Build());
     }
 
-    public async Task<bool> SetCharacterAsync(CharacterRoleplayData data, Action<bool> callback, CancellationToken cancellationToken = default)
+    public async Task<bool> SetCharacterAsync(ICharacterRoleplayData data, Action<bool> callback, CancellationToken cancellationToken = default)
     {
       PluginLog.LogDebug($"SetCharacterAsync: {data.User}@{data.World}");
+
       using var timeoutSource = new CancellationTokenSource(TimeSpan.FromSeconds(10));
       using var combinedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutSource.Token);
 
@@ -78,16 +76,16 @@ namespace RPBlurb
       return docRef;
     }
 
-    public CharacterRoleplayData GetCharacter(string world, string user, bool cache = true)
+    public ICharacterRoleplayData GetCharacter(string world, string user, bool cache = true)
     {
-      if (cache && Cache.TryGetValue($"{user}@{world}", out CharacterRoleplayData? value))
+      if (cache && Cache.TryGetValue($"{user}@{world}", out ICharacterRoleplayData? value))
       {
         return value;
       }
       else
       {
         PluginLog.LogDebug("GetCharacter: " + user + "@" + world);
-        value = new CharacterRoleplayData(GetCharacterDocRef(world, user));
+        value = new CloudCharacterRoleplayData(GetCharacterDocRef(world, user));
         if (cache)
         {
           Cache[$"{user}@{world}"] = value;
@@ -115,7 +113,7 @@ namespace RPBlurb
       }
 
       Cache.Clear();
-      
+
       GC.SuppressFinalize(this);
     }
   }

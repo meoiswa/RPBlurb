@@ -33,8 +33,8 @@ namespace RPBlurb
 
     public RPBlurbOverlay Overlay { get; set; }
 
-    private CharacterRoleplayData? selfCharacter = null;
-    public CharacterRoleplayData? SelfCharacter
+    private ICharacterRoleplayData? selfCharacter = null;
+    public ICharacterRoleplayData? SelfCharacter
     {
       get
       {
@@ -60,9 +60,10 @@ namespace RPBlurb
         return selfCharacter;
       }
     }
-    public CharacterRoleplayData? TargetCharacterRoleplayData { get; set; }
+    public ICharacterRoleplayData? TargetCharacterRoleplayData { get; set; } = null;
 
-    public CharacterRoleplayDataService CharacterRoleplayDataService { get; init; }
+    public CloudCharacterRoleplayDataService CharacterRoleplayDataService { get; init; }
+    public FirebaseAuthService FirebaseAuthService { get; init; }
 
     public RPBlurbPlugin(
         [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
@@ -75,11 +76,13 @@ namespace RPBlurb
       CommandManager = commandManager;
       ChatGui = chatGui;
 
-      WindowSystem = new("RPBlurbPlugin");
-      CharacterRoleplayDataService = new CharacterRoleplayDataService();
-
       Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       Configuration.Initialize(this);
+
+      WindowSystem = new("RPBlurbPlugin");
+      CharacterRoleplayDataService = new CloudCharacterRoleplayDataService();
+
+      FirebaseAuthService = new FirebaseAuthService(this); 
 
       ClientState = Service.ClientState;
 
@@ -163,17 +166,23 @@ namespace RPBlurb
 
     private void DrawUI()
     {
-      WindowSystem.Draw();
+      if (Configuration != null)
+      {
+        WindowSystem.Draw();
+      }
     }
 
     private void DrawConfigUI()
     {
-      SetVisible(!Configuration.IsVisible);
+      if (Configuration != null)
+      {
+        SetVisible(!Configuration.IsVisible);
+      }
     }
 
     public void OnUpdate(Framework framework)
     {
-      if (Configuration.Enabled && TargetManager.Target is PlayerCharacter)
+      if (Configuration.Enabled && TargetManager.Target is PlayerCharacter && FirebaseAuthService.State == FirebaseAuthState.LoggedIn)
       {
         var chara = TargetManager.Target as PlayerCharacter;
         if (chara != null)

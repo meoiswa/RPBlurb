@@ -1,53 +1,32 @@
 using Dalamud.Logging;
-using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using System;
 using System.Numerics;
-using Dalamud.Interface.GameFonts;
-using Dalamud.Interface;
 
 namespace RPBlurb
 {
   // It is good to have this be disposable in general, in case you ever need it
   // to do any cleanup
-  public unsafe class RPBlurbUI : Window, IDisposable
+  public unsafe class RPBlurbUI : RPBlurbWindowBase
   {
-    private readonly RPBlurbPlugin plugin;
     private bool pendingSave;
     private bool pendingModified;
-    private readonly GameFontHandle jupiterStyleLarge;
-    private readonly GameFontHandle axisStyleLarge;
-    private readonly GameFontHandle trumpGothicStyleLarge;
-    private readonly GameFontHandle titleStyle;
-    private readonly GameFontHandle itallicsStyle;
+    
+    public string Password { get; set; } = "";
 
     public RPBlurbUI(RPBlurbPlugin plugin)
       : base(
+        plugin,
         "RPBlurb##ConfigWindow",
         ImGuiWindowFlags.AlwaysAutoResize
         | ImGuiWindowFlags.NoResize
         | ImGuiWindowFlags.NoCollapse
       )
     {
-      this.plugin = plugin;
-
       SizeConstraints = new WindowSizeConstraints()
       {
         MinimumSize = new Vector2(468, 0),
         MaximumSize = new Vector2(468, 1000)
       };
-
-      jupiterStyleLarge = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Jupiter, 36));
-      axisStyleLarge = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Axis, 36));
-      trumpGothicStyleLarge = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.TrumpGothic, 36));
-
-      titleStyle = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Axis, 20));
-      itallicsStyle = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Axis, 14) { Italic = true });
-    }
-
-    public void Dispose()
-    {
-      GC.SuppressFinalize(this);
     }
 
     public override void OnClose()
@@ -63,6 +42,13 @@ namespace RPBlurb
       if (ImGui.Checkbox("Master Enable", ref enabled))
       {
         plugin.Configuration.Enabled = enabled;
+        plugin.Configuration.Save();
+      }
+
+      var hidden = plugin.Configuration.HideEmail;
+      if (ImGui.Checkbox("Hide Email", ref hidden))
+      {
+        plugin.Configuration.HideEmail = hidden;
         plugin.Configuration.Save();
       }
     }
@@ -185,12 +171,12 @@ namespace RPBlurb
           ImGui.EndTable();
         }
 
-
         // Add a button to save the Self Character data
         if (pendingSave || !plugin.SelfCharacter.Modified)
         {
           ImGui.BeginDisabled();
         }
+
         if (ImGui.Button("Save"))
         {
           pendingSave = true;
@@ -218,7 +204,6 @@ namespace RPBlurb
         {
           ImGui.EndDisabled();
         }
-
       }
       else
       {
@@ -226,113 +211,91 @@ namespace RPBlurb
       }
     }
 
-    public void DrawDataForm(CharacterRoleplayData? data)
+    public void DrawAuthSection()
     {
-      // ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f));
-      if (data != null)
+      var state = plugin.FirebaseAuthService.State;
+      if (state == FirebaseAuthState.LoggedOut || state == FirebaseAuthState.Error)
       {
-        if (data.Loading)
+        ImGui.Text("Logging in is required to use this plugin.");
+        ImGui.Text("Visit the website rpblurb.meoiswa.cat to create an account.");
+
+        string email = plugin.Configuration.Email;
+        if (ImGui.InputText("##Email", ref email, 256))
         {
-          ImGui.Text("Loading...");
-        } 
-        else if (!data.Invalid)
-        {
-          var fontPushed = false;
-          switch (data.NameStyle ?? 0)
-          {
-            case 0:
-              ImGui.PushFont(jupiterStyleLarge.ImFont);
-              fontPushed = true;
-              break;
-            case 1:
-              ImGui.PushFont(axisStyleLarge.ImFont);
-              fontPushed = true;
-              break;
-            case 2:
-              ImGui.PushFont(trumpGothicStyleLarge.ImFont);
-              fontPushed = true;
-              break;
-            default:
-              break;
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Name))
-          {
-            ImGuiHelpers.CenteredText(data.Name);
-          }
-          else
-          {
-            ImGuiHelpers.CenteredText(data.User ?? "");
-          }
-
-          if (fontPushed)
-          {
-            ImGui.PopFont();
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Title))
-          {
-            ImGui.PushFont(titleStyle.ImFont);
-            ImGuiHelpers.CenteredText(data.Title);
-            ImGui.PopFont();
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Alignment))
-          {
-            ImGui.PushFont(itallicsStyle.ImFont);
-            ImGuiHelpers.CenteredText("\u00AB" + data.Alignment + "\u00BB");
-            ImGui.PopFont();
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Status))
-          {
-            ImGui.Separator();
-            ImGuiHelpers.CenteredText(data.Status);
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Description))
-          {
-            ImGui.Separator();
-            ImGuiHelpers.SafeTextWrapped(data.Description);
-          }
+          plugin.Configuration.Email = email;
+          plugin.Configuration.Save();
         }
-        else
+
+        string password = Password;
+        if (ImGui.InputText("##Password", ref password, 256, ImGuiInputTextFlags.Password))
         {
-          ImGui.Text("No Roleplay Sheet");
+          Password = password;
+          plugin.Configuration.Save();
+        }
+
+        if (ImGui.Button("Login"))
+        {
+          plugin.FirebaseAuthService.LoginWithEmailAndPassword(plugin.Configuration.Email, Password);
         }
       }
-      else
+      else if (state == FirebaseAuthState.LoggingIn)
       {
-        ImGui.Text("No target");
+        ImGui.Text("Logging in...");
       }
-      // ImGui.PopStyleVar();
+      else if (state == FirebaseAuthState.LoggedIn)
+      {
+        var email = plugin.Configuration.Email;
+        if (plugin.Configuration.HideEmail)
+        {
+          // replace all but the first letter of the username and domains with asterisks
+          var parts = email.Split('@');
+          var username = parts[0];
+          var domain = parts[1];
+          username = username[0] + new string('*', username.Length - 1);
+          domain = domain[0] + new string('*', domain.Length - 1);
+          email = $"{username}@{domain}";
+        }
+        ImGui.Text($"Logged in as {email}");
+        ImGui.SameLine();
+        if (ImGui.Button("Logout"))
+        {
+          plugin.FirebaseAuthService.Logout();
+        }
+      }
     }
 
     public override void Draw()
     {
-      DrawSectionToggles();
+      DrawAuthSection();
 
-      ImGui.Separator();
-
-      DrawSectionOverlay();
-
-      if (ImGui.BeginTabBar("tabs"))
+      if (plugin.FirebaseAuthService.State == FirebaseAuthState.LoggedIn)
       {
-        if (ImGui.BeginTabItem("Target"))
+        ImGui.Separator();
+
+        DrawSectionToggles();
+
+        ImGui.Separator();
+
+        DrawSectionOverlay();
+
+        if (ImGui.BeginTabBar("tabs"))
         {
-          DrawDataForm(plugin.TargetCharacterRoleplayData);
-          ImGui.EndTabItem();
+          if (ImGui.BeginTabItem("Target"))
+          {
+            DrawDataForm(plugin.TargetCharacterRoleplayData);
+            ImGui.EndTabItem();
+          }
+          if (ImGui.BeginTabItem("Self"))
+          {
+            DrawSelfForm();
+            ImGui.Separator();
+            ImGui.Text("Preview: ");
+            ImGui.Separator();
+            DrawDataForm(plugin.SelfCharacter);
+            ImGui.EndTabItem();
+          }
+          ImGui.EndTabBar();
         }
-        if (ImGui.BeginTabItem("Self"))
-        {
-          DrawSelfForm();
-          ImGui.Separator();
-          ImGui.Text("Preview: ");
-          ImGui.Separator();
-          DrawDataForm(plugin.SelfCharacter);
-          ImGui.EndTabItem();
-        }
-        ImGui.EndTabBar();
       }
     }
   }

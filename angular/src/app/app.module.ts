@@ -34,6 +34,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { EmailDialogComponent } from './signin/email-dialog/email-dialog/email-dialog.component';
 import { CloseDialogComponent } from './signin/close-dialog/close-dialog/close-dialog.component';
+import { StatsDialogComponent } from './stats-dialog/stats-dialog/stats-dialog.component';
 
 @NgModule({
   declarations: [
@@ -46,6 +47,7 @@ import { CloseDialogComponent } from './signin/close-dialog/close-dialog/close-d
     SigninComponent,
     EmailDialogComponent,
     CloseDialogComponent,
+    StatsDialogComponent,
   ],
   imports: [
     BrowserModule,

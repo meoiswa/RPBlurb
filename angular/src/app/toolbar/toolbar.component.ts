@@ -1,7 +1,9 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, inject } from '@angular/core';
 import { Auth, user } from '@angular/fire/auth';
+import { MatDialog } from '@angular/material/dialog';
 import { map, Observable, Subscription } from 'rxjs';
+import { StatsDialogComponent } from '../stats-dialog/stats-dialog/stats-dialog.component';
 
 @Component({
   selector: 'rp-toolbar',
@@ -17,7 +19,10 @@ export class ToolbarComponent {
     map(result => result.matches)
   );
 
-  constructor(private breakpointObserver: BreakpointObserver) {
+  constructor(
+    private breakpointObserver: BreakpointObserver,
+    public dialog: MatDialog
+  ) {
   }
 
 
@@ -41,5 +46,9 @@ export class ToolbarComponent {
 
   public logout() {
     this.auth.signOut();
+  }
+
+  public showStats() {
+    const dialogRef = this.dialog.open(StatsDialogComponent);
   }
 }

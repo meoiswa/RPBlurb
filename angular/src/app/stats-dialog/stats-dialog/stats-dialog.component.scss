@@ -1,0 +1,21 @@
+.chart div {
+  text-align: right;
+  background-color: #c2185b;
+}
+
+.chart {
+  min-width: 300px;
+}
+
+.left {
+  text-align: right;
+  padding-right: 5px;
+}
+
+.table {
+  display: flex;
+}
+
+.table div > div {
+  margin-bottom: 1px;
+}

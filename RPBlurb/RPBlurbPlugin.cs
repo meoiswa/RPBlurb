@@ -1,10 +1,6 @@
 ﻿using System.IO;
 using Dalamud.Game;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -23,14 +19,10 @@ namespace RPBlurb
 
     public DalamudPluginInterface PluginInterface { get; init; }
     public CommandManager CommandManager { get; init; }
-    public ChatGui ChatGui { get; init; }
     public Configuration Configuration { get; init; }
     public WindowSystem WindowSystem { get; init; }
-    public Condition Condition { get; init; }
-    public ClientState ClientState { get; init; }
-    public TargetManager TargetManager { get; init; }
-    public RPBlurbUI Window { get; init; }
 
+    public RPBlurbUI Window { get; init; }
     public RPBlurbOverlay Overlay { get; set; }
 
     private CharacterRoleplayData? selfCharacter = null;
@@ -38,10 +30,10 @@ namespace RPBlurb
     {
       get
       {
-        if (ClientState.LocalPlayer != null && ClientState.LocalPlayer.HomeWorld.GameData != null)
+        if (Service.ClientState.LocalPlayer != null && Service.ClientState.LocalPlayer.HomeWorld.GameData != null)
         {
-          var world = ClientState.LocalPlayer.HomeWorld.GameData.Name.ToString();
-          var user = ClientState.LocalPlayer.Name.ToString();
+          var world = Service.ClientState.LocalPlayer.HomeWorld.GameData.Name.ToString();
+          var user = Service.ClientState.LocalPlayer.Name.ToString();
 
           if (selfCharacter != null && (selfCharacter.World != world || selfCharacter.User != user))
           {
@@ -66,14 +58,12 @@ namespace RPBlurb
 
     public RPBlurbPlugin(
         [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-        [RequiredVersion("1.0")] CommandManager commandManager,
-        [RequiredVersion("1.0")] ChatGui chatGui)
+        [RequiredVersion("1.0")] CommandManager commandManager)
     {
       pluginInterface.Create<Service>();
 
       PluginInterface = pluginInterface;
       CommandManager = commandManager;
-      ChatGui = chatGui;
 
       WindowSystem = new("RPBlurbPlugin");
       CharacterRoleplayDataService = new CharacterRoleplayDataService();
@@ -81,10 +71,6 @@ namespace RPBlurb
       Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
       Configuration.Initialize(this);
 
-      ClientState = Service.ClientState;
-
-      Condition = Service.Condition;
-      TargetManager = Service.TargetManager;
       Service.Framework.Update += OnUpdate;
 
       Window = new RPBlurbUI(this)
@@ -173,9 +159,9 @@ namespace RPBlurb
 
     public void OnUpdate(Framework framework)
     {
-      if (Configuration.Enabled && TargetManager.Target is PlayerCharacter)
+      if (Configuration.Enabled && Service.TargetManager.Target is PlayerCharacter)
       {
-        var chara = TargetManager.Target as PlayerCharacter;
+        var chara = Service.TargetManager.Target as PlayerCharacter;
         if (chara != null)
         {
           var charaUser = chara.Name.ToString();

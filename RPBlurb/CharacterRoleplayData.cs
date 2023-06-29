@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Dalamud.Logging;
 using Google.Cloud.Firestore;
 
@@ -20,11 +19,11 @@ namespace RPBlurb
     private FirestoreChangeListener CreateListener()
     {
       return docRef.Listen(snapshot =>
-      { 
+      {
         PluginLog.LogDebug("Document Snapshot: " + snapshot.Id);
-        Loading = false; 
+        Loading = false;
         if (snapshot.Exists)
-        { 
+        {
           if (snapshot.TryGetValue<string>("World", out var world))
           {
             World = world;

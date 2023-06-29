@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors>Meoiswa</Authors>
     <Company></Company>
-    <Version>1.0.1.0</Version>
+    <Version>1.0.2.0</Version>
     <Description>Realtime Roleplay sheets</Description>
     <Copyright></Copyright>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -38,6 +38,10 @@
 
   <ItemGroup>
     <PackageReference Include="DalamudPackager" Version="2.1.10" />
+    <Reference Include="Dalamud.Interface">
+      <HintPath>$(DalamudLibPath)Dalamud.Interface.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
       <Private>false</Private>

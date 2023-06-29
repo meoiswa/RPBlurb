@@ -1,51 +1,32 @@
 using Dalamud.Logging;
-using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
 using System.Numerics;
-using Dalamud.Interface.GameFonts;
-using Dalamud.Interface;
 
 namespace RPBlurb
 {
-  // It is good to have this be disposable in general, in case you ever need it
-  // to do any cleanup
-  public unsafe class RPBlurbUI : Window, IDisposable
+  public unsafe class RPBlurbUI : RPBlurbUIBase
   {
-    private readonly RPBlurbPlugin plugin;
     private bool pendingSave;
     private bool pendingModified;
-    private readonly GameFontHandle jupiterStyleLarge;
-    private readonly GameFontHandle axisStyleLarge;
-    private readonly GameFontHandle trumpGothicStyleLarge;
-    private readonly GameFontHandle titleStyle;
-    private readonly GameFontHandle itallicsStyle;
 
     public RPBlurbUI(RPBlurbPlugin plugin)
       : base(
+        plugin,
         "RPBlurb##ConfigWindow",
         ImGuiWindowFlags.AlwaysAutoResize
         | ImGuiWindowFlags.NoResize
         | ImGuiWindowFlags.NoCollapse
       )
     {
-      this.plugin = plugin;
-
       SizeConstraints = new WindowSizeConstraints()
       {
         MinimumSize = new Vector2(468, 0),
         MaximumSize = new Vector2(468, 1000)
       };
-
-      jupiterStyleLarge = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Jupiter, 36));
-      axisStyleLarge = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Axis, 36));
-      trumpGothicStyleLarge = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.TrumpGothic, 36));
-
-      titleStyle = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Axis, 20));
-      itallicsStyle = plugin.PluginInterface.UiBuilder.GetGameFontHandle(new GameFontStyle(GameFontFamily.Axis, 14) { Italic = true });
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
       GC.SuppressFinalize(this);
     }
@@ -224,88 +205,6 @@ namespace RPBlurb
       {
         ImGui.Text("Loading...");
       }
-    }
-
-    public void DrawDataForm(CharacterRoleplayData? data)
-    {
-      // ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f, 0.5f));
-      if (data != null)
-      {
-        if (data.Loading)
-        {
-          ImGui.Text("Loading...");
-        } 
-        else if (!data.Invalid)
-        {
-          var fontPushed = false;
-          switch (data.NameStyle ?? 0)
-          {
-            case 0:
-              ImGui.PushFont(jupiterStyleLarge.ImFont);
-              fontPushed = true;
-              break;
-            case 1:
-              ImGui.PushFont(axisStyleLarge.ImFont);
-              fontPushed = true;
-              break;
-            case 2:
-              ImGui.PushFont(trumpGothicStyleLarge.ImFont);
-              fontPushed = true;
-              break;
-            default:
-              break;
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Name))
-          {
-            ImGuiHelpers.CenteredText(data.Name);
-          }
-          else
-          {
-            ImGuiHelpers.CenteredText(data.User ?? "");
-          }
-
-          if (fontPushed)
-          {
-            ImGui.PopFont();
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Title))
-          {
-            ImGui.PushFont(titleStyle.ImFont);
-            ImGuiHelpers.CenteredText(data.Title);
-            ImGui.PopFont();
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Alignment))
-          {
-            ImGui.PushFont(itallicsStyle.ImFont);
-            ImGuiHelpers.CenteredText("\u00AB" + data.Alignment + "\u00BB");
-            ImGui.PopFont();
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Status))
-          {
-            ImGui.Separator();
-            ImGuiHelpers.CenteredText(data.Status);
-          }
-
-          if (!string.IsNullOrWhiteSpace(data.Description))
-          {
-            ImGui.Separator();
-            ImGuiHelpers.SafeTextWrapped(data.Description);
-          }
-        }
-        else
-        {
-          ImGui.Text("No Roleplay Sheet");
-        }
-      }
-      else
-      {
-        ImGui.Text("No target");
-      }
-      // ImGui.PopStyleVar();
     }
 
     public override void Draw()

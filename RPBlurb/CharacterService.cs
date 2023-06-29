@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Logging;
-using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Google.Cloud.Firestore.V1;
 using Newtonsoft.Json;
@@ -115,7 +113,7 @@ namespace RPBlurb
       }
 
       Cache.Clear();
-      
+
       GC.SuppressFinalize(this);
     }
   }
